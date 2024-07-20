@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+# Compile directories
+Debug/
+Release/
