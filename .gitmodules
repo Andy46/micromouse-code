@@ -1,0 +1,3 @@
+[submodule "project/STM32-Micromouse-code/Drivers/BMI160_SensorAPI"]
+	path = project/STM32-Micromouse-code/Drivers/BMI160_SensorAPI
+	url = https://github.com/boschsensortec/BMI160_SensorAPI
