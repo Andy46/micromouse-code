@@ -81,6 +81,10 @@ void Error_Handler(void);
 #define MOTOR_FAULT_GPIO_Port GPIOB
 #define BMI_CS_Pin GPIO_PIN_12
 #define BMI_CS_GPIO_Port GPIOB
+#define SD_DETECT_Pin GPIO_PIN_8
+#define SD_DETECT_GPIO_Port GPIOA
+#define SD_CS_Pin GPIO_PIN_9
+#define SD_CS_GPIO_Port GPIOA
 #define BT_STATE_Pin GPIO_PIN_10
 #define BT_STATE_GPIO_Port GPIOA
 #define BT_ENABLE_Pin GPIO_PIN_11
