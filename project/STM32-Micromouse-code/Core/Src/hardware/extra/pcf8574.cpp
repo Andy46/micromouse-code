@@ -6,6 +6,8 @@
  */
 #include "hardware/extra/pcf8574.h"
 
+#include <stdio.h>
+
 namespace
 {
 constexpr int PCF8574_PIN_COUNT = 8;
@@ -93,10 +95,12 @@ uint8_t PCF8574::readAll()
 // Read/write individual pins
 void PCF8574::writePin(const uint8_t pin, const uint8_t value)
 {
+	const uint8_t inputMask = ~configuration;
 	// TODO: Protect with mutex
 	if (pin < PCF8574_PIN_COUNT && getBit(configuration, pin))
 	{
-		setBit(states, pin, value);
+	    setBit(states, pin, value);
+		states |= inputMask;
 		sendValues(states);
 	}
 }
@@ -110,6 +114,28 @@ uint8_t PCF8574::readPin(const uint8_t pin)
 		return getBit(states, pin);
 	}
 	return 0;
+}
+
+std::unique_ptr<PCF8574::GPIO> PCF8574::getGPIO(uint8_t pin)
+{
+	return std::make_unique<PCF8574::GPIO>(shared_from_this(), pin);
+}
+
+/* GPIO from expander */
+PCF8574::GPIO::GPIO(std::shared_ptr<PCF8574> expander, const uint8_t pin) :
+		expander(expander), pin(pin)
+{
+
+}
+
+void PCF8574::GPIO::set()
+{
+	expander->writePin(pin, 1);
+}
+
+void PCF8574::GPIO::clear()
+{
+	expander->writePin(pin, 0);
 }
 
 } /* namespace HARDWARE::EXTRA */

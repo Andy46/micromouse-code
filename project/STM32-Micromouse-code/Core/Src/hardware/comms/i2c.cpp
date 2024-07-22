@@ -7,6 +7,8 @@
 
 #include "hardware/comms/i2c.h"
 
+#include <stdio.h>
+
 namespace HARDWARE::COMMS
 {
 
@@ -23,7 +25,7 @@ int I2C::send(const I2CAddress_t address, uint8_t* buffer, const uint16_t length
 		return -1;
 	}
 	// TODO: Add mutex protection
-	HAL_I2C_Master_Transmit(&hi2c, address, buffer, length, timeout);
+	HAL_I2C_Master_Transmit(&hi2c, (address << 1), buffer, length, timeout);
 	return 0;
 }
 
@@ -34,7 +36,7 @@ int I2C::receive(const I2CAddress_t address, uint8_t* buffer, const uint16_t len
 		return -1;
 	}
 	// TODO: Add mutex protection
-	HAL_I2C_Master_Receive(&hi2c, address, buffer, length, timeout);
+	HAL_I2C_Master_Receive(&hi2c, (address << 1 | 1), buffer, length, timeout);
 	return 0;
 }
 

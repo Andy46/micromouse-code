@@ -14,7 +14,7 @@
 namespace HARDWARE::EXTRA
 {
 
-class PCF8574
+class PCF8574 : public std::enable_shared_from_this<PCF8574>
 {
 private:
 	std::shared_ptr<COMMS::I2C> i2c;
@@ -41,6 +41,26 @@ public:
 	void writePin(const uint8_t pin, const uint8_t values);
 	uint8_t readPin(const uint8_t pin);
 
+	/* GPIO from expander */
+	class GPIO
+	{
+	private:
+		std::shared_ptr<PCF8574> expander;
+		const uint8_t            pin;
+
+		friend class HARDWARE::EXTRA::PCF8574;
+
+	public:
+		GPIO(std::shared_ptr<PCF8574> expander, const uint8_t pin);
+		GPIO(GPIO&) = delete;
+		GPIO(GPIO&&) = default;
+		virtual ~GPIO() = default;
+
+		void set();
+		void clear();
+	};
+
+	std::unique_ptr<GPIO> getGPIO(uint8_t pin);
 };
 
 } /* namespace HARDWARE::EXTRA */

@@ -135,18 +135,18 @@
 //// TOF GPIO Expander
 //constexpr uint16_t   GPIOEXPANDER_TOF_ID             = 0;
 constexpr uint16_t   GPIOEXPANDER_TOF_ADDRESS        = 0x20;
-//
+
 //constexpr port_ptr_t GPIOEXPANDER_TOF_INT_PORT       = TOF_INT_GPIO_Port;
 //constexpr uint16_t   GPIOEXPANDER_TOF_INT_PIN        = GPIO_PIN_12;
-//
-//constexpr uint16_t   GPIOEXPANDER_TOF_TOF0_XSHUT_PIN = 0;
-//constexpr uint16_t   GPIOEXPANDER_TOF_TOF0_INT_PIN   = 1;
-//constexpr uint16_t   GPIOEXPANDER_TOF_TOF1_XSHUT_PIN = 2;
-//constexpr uint16_t   GPIOEXPANDER_TOF_TOF1_INT_PIN   = 3;
-//constexpr uint16_t   GPIOEXPANDER_TOF_TOF2_XSHUT_PIN = 4;
-//constexpr uint16_t   GPIOEXPANDER_TOF_TOF2_INT_PIN   = 5;
-//constexpr uint16_t   GPIOEXPANDER_TOF_TOF3_XSHUT_PIN = 6;
-//constexpr uint16_t   GPIOEXPANDER_TOF_TOF3_INT_PIN   = 7;
+
+constexpr uint16_t   GPIOEXPANDER_TOF_TOF0_XSHUT_PIN = 0;
+constexpr uint16_t   GPIOEXPANDER_TOF_TOF0_INT_PIN   = 1;
+constexpr uint16_t   GPIOEXPANDER_TOF_TOF1_XSHUT_PIN = 2;
+constexpr uint16_t   GPIOEXPANDER_TOF_TOF1_INT_PIN   = 3;
+constexpr uint16_t   GPIOEXPANDER_TOF_TOF2_XSHUT_PIN = 4;
+constexpr uint16_t   GPIOEXPANDER_TOF_TOF2_INT_PIN   = 5;
+constexpr uint16_t   GPIOEXPANDER_TOF_TOF3_XSHUT_PIN = 6;
+constexpr uint16_t   GPIOEXPANDER_TOF_TOF3_INT_PIN   = 7;
 //
 //// LED-Switch GPIO Expander
 //constexpr uint16_t   GPIOEXPANDER_SWLED_ID           = 1;

@@ -107,6 +107,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
   // Start application
+
   app_main();
 
     /* USER CODE END WHILE */
