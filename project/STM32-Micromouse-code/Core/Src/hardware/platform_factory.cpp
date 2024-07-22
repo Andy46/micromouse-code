@@ -15,7 +15,7 @@
 #include "i2c.h"
 #include "spi.h"
 #include "usart.h"
-//#include "gpio.h"
+#include "gpio.h"
 
 
 // #include "dma.h" //TODO: Use it...
@@ -32,7 +32,7 @@
 
 // Sensors
 #include "hardware/sensors/tof_vl53l1x.h"
-//#include "hardware/sensors/bmi160.h"
+#include "hardware/sensors/bmi160.h"
 //#include "hardware/sensors/encoder.h"
 
 //#include "hardware/actuators/motor.h"
@@ -41,7 +41,7 @@
 #include "hardware/extra/pcf8574.h"
 #include "hardware/extra/leds.h"
 #include "hardware/extra/switches.h"
-//#include "hardware/extra/gpio.h"
+#include "hardware/extra/gpio.h"
 //#include "hardware/extra/gpio_direct.h"
 //#include "hardware/extra/gpio_expand.h"
 
@@ -73,7 +73,6 @@ Platform PlatformFactory::CreatePlatform()
 	ledsw_expander->configAll(0xF0); // 7-4 SW, 3-0 LEDs
 	ledsw_expander->writeAll(0x00);  // All OFF
 
-
 	// LEDS & Switches
 	auto leds     = std::make_shared<EXTRA::LEDS>(ledsw_expander);
 	auto switches = std::make_shared<EXTRA::Switches>(ledsw_expander);
@@ -84,8 +83,12 @@ Platform PlatformFactory::CreatePlatform()
 	auto tof_3 = std::make_shared<SENSORS::TOF_VL53L1X>(i2c2, tof_expander->getGPIO(GPIOEXPANDER_TOF_TOF2_XSHUT_PIN));
 	auto tof_4 = std::make_shared<SENSORS::TOF_VL53L1X>(i2c2, tof_expander->getGPIO(GPIOEXPANDER_TOF_TOF3_XSHUT_PIN));
 
+	// BMI160
+	auto bmi_cs = std::make_shared<EXTRA::GPIO> (GPIOB, GPIO_PIN_12);
+	auto bmi = std::make_shared<SENSORS::BMI160>(spi1, bmi_cs);
+
 	// Create the platform and return it
-	return Platform (tof_1, tof_2, tof_3, tof_4, leds, switches);
+	return Platform (tof_1, tof_2, tof_3, tof_4, bmi, leds, switches);
 }
 
 } /* namespace HARDWARE */

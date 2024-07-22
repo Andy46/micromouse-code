@@ -10,37 +10,48 @@
 /* C/C++ libraries */
 #include <stdio.h>
 
-/* STM32 libraries */
-#include "main.h"
-#include "spi.h"
-
 #define BMI160_CS_PORT GPIOB
 #define BMI160_CS_PIN  GPIO_PIN_1
+
+#undef DEBUG
 
 namespace
 {
 constexpr int CALIBRATION_READS = 1000;
+
+#define BMI_COUNT 1
+struct bmi_cb_data_t
+{
+	std::shared_ptr<HARDWARE::COMMS::SPI> spi;
+	std::shared_ptr<HARDWARE::EXTRA::GPIO> cs;
+};
+struct bmi_cb_data_t bmi_cbs [BMI_COUNT];
+static uint8_t bmi_created_count = 0;
 
 // I2C Callbacks
 int8_t bmi160spi_read_cb (uint8_t dev_addr, uint8_t reg_addr, uint8_t *read_data, uint16_t len)
 {
 #ifdef DEBUG
     printf("Reading from SPI!\n");
+    printf("dev: 0x%x\n", dev_addr);
     printf("reg: 0x%x\n", reg_addr);
     printf("Len: %d\n", len);
 #endif
-
     // Activate SPI chip select line
-    HAL_GPIO_WritePin(BMI160_CS_PORT, BMI160_CS_PIN, GPIO_PIN_RESET);
+//    HAL_GPIO_WritePin(BMI160_CS_PORT, BMI160_CS_PIN, GPIO_PIN_RESET);
+    bmi_cbs[dev_addr].cs->clear();
 
     // Send command
-    HAL_SPI_Transmit(&hspi1, &reg_addr, sizeof(reg_addr), 1000);
+//    HAL_SPI_Transmit(&hspi1, &reg_addr, sizeof(reg_addr), 1000);
+    bmi_cbs[dev_addr].spi->send(&reg_addr, sizeof(reg_addr), 1000);
 
     // Receive data
-    HAL_SPI_Receive(&hspi1, read_data, len, 1000);
+//    HAL_SPI_Receive(&hspi1, read_data, len, 1000);
+    bmi_cbs[dev_addr].spi->receive(read_data, len, 1000);
 
     // Deactivate SPI chip select line
-    HAL_GPIO_WritePin(BMI160_CS_PORT, BMI160_CS_PIN, GPIO_PIN_SET);
+//    HAL_GPIO_WritePin(BMI160_CS_PORT, BMI160_CS_PIN, GPIO_PIN_SET);
+    bmi_cbs[dev_addr].cs->set();
 
     return 0;
 }
@@ -49,6 +60,9 @@ int8_t bmi160spi_write_cb (uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, ui
 {
 #ifdef DEBUG
     printf("Writing to SPI!\n");
+    printf("dev: 0x%x\n", dev_addr);
+    printf("reg: 0x%x\n", reg_addr);
+    printf("Len: %d\n", len);
 #endif
 
     // Compose transmission buffer (address + data)
@@ -57,13 +71,16 @@ int8_t bmi160spi_write_cb (uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, ui
     memcpy(&(buffer[1]), data, len);
 
     // Activate SPI chip select line
-    HAL_GPIO_WritePin(BMI160_CS_PORT, BMI160_CS_PIN, GPIO_PIN_RESET);
+    bmi_cbs[dev_addr].cs->clear();
+//    HAL_GPIO_WritePin(BMI160_CS_PORT, BMI160_CS_PIN, GPIO_PIN_RESET);
 
     // Send buffer
-    HAL_SPI_Transmit(&hspi1, buffer, sizeof(buffer), 1000);
+//    HAL_SPI_Transmit(&hspi1, buffer, sizeof(buffer), 1000);
+    bmi_cbs[dev_addr].spi->send(buffer, sizeof(buffer), 1000);
 
     // Deactivate SPI chip select line
-    HAL_GPIO_WritePin(BMI160_CS_PORT, BMI160_CS_PIN, GPIO_PIN_SET);
+//    HAL_GPIO_WritePin(BMI160_CS_PORT, BMI160_CS_PIN, GPIO_PIN_SET);
+    bmi_cbs[dev_addr].cs->set();
 
     return 0;
 }
@@ -80,27 +97,33 @@ namespace HARDWARE::SENSORS
 {
 
 //BMI160::BMI160(SPI_HandleTypeDef* spi, GPIO_TypeDef * gpio, uint16_t pin)
-BMI160::BMI160()
+BMI160::BMI160(std::shared_ptr<COMMS::SPI> spi, std::shared_ptr<EXTRA::GPIO> cs) :
+		spi(spi), cs(cs)
 {
-
-}
-
-int8_t BMI160::init()
-{
-
-	int8_t status = 0;
-
-    // Set SPI chip select line to unselect
-    HAL_GPIO_WritePin(BMI160_CS_PORT, BMI160_CS_PIN, GPIO_PIN_SET);
+	// ID is used to identify device in callback functions
+    bmi160dev.id = bmi_created_count;
 
     /* Set interface address spi address */
     bmi160dev.intf = BMI160_SPI_INTF;
-//    bmi160dev.id   = BMI160_DEV_ADDR;
+
+    // Set callback parameters
+    bmi_cbs[bmi160dev.id].cs  = cs;
+    bmi_cbs[bmi160dev.id].spi = spi;
 
     // Set communication callback functions for BMI160 library
     bmi160dev.read     = bmi160spi_read_cb;
     bmi160dev.write    = bmi160spi_write_cb;
     bmi160dev.delay_ms = bmi160spi_delay_ms_cb;
+
+    // Set SPI chip select line to unselect
+    cs->set();
+
+    bmi_created_count++;
+}
+
+int8_t BMI160::init()
+{
+	int8_t status = 0;
 
     // Initialize sensor using library
     status = bmi160_init(&bmi160dev);
@@ -113,22 +136,23 @@ int8_t BMI160::init()
     {
     	printf("Error initializing BMI160!\n");
         status = 1;
+        return status;
     }
-
-	/* Calibrate */
-
-	int64_t sum = 0;
-	struct bmi160_sensor_data gyro_data;
-
-	for (int i=0; i<CALIBRATION_READS; i++)
-	{
-		read_gyro(&gyro_data);
-		sum += gyro_data.z;
-		printf("%d - %lld\n",gyro_data.z, sum);
-		HAL_Delay(10);
-	}
-
-	calibrationZ = sum / CALIBRATION_READS;
+//
+//	/* Calibrate */
+//
+//	int64_t sum = 0;
+//	struct bmi160_sensor_data gyro_data;
+//
+//	for (int i=0; i<CALIBRATION_READS; i++)
+//	{
+//		read_gyro(&gyro_data);
+//		sum += gyro_data.z;
+//		printf("%d - %lld\n",gyro_data.z, sum);
+//		HAL_Delay(10);
+//	}
+//
+//	calibrationZ = sum / CALIBRATION_READS;
 
 	/* Configure */
 

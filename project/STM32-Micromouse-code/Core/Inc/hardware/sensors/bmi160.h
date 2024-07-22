@@ -9,6 +9,11 @@
 
 /* C/C++ libraries */
 #include <stdint.h>
+#include <memory>
+
+/* Platform libraries */
+#include "hardware/comms/spi.h"
+#include "hardware/extra/gpio.h"
 
 /* BMI160 sensor library */
 #include <bmi160.h>
@@ -19,6 +24,8 @@ namespace HARDWARE::SENSORS
 class BMI160
 {
 private:
+	std::shared_ptr<COMMS::SPI> spi;
+	std::shared_ptr<EXTRA::GPIO> cs;
 	struct bmi160_dev bmi160dev;
 	int16_t calibrationZ = 0;
 
@@ -26,7 +33,7 @@ private:
 //	uint16_t      pin;
 
 public:
-	BMI160();
+	BMI160(std::shared_ptr<COMMS::SPI> spi, std::shared_ptr<EXTRA::GPIO> cs);
 	virtual ~BMI160() = default;
 
 	int8_t init();

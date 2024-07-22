@@ -12,12 +12,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// #include "actuators/motor_driver.h"
 // #include "actuators/motor.h"
+// #include "actuators/motor_driver.h"
 
- #include "sensors/tof_vl53l1x.h"
+ #include "sensors/bmi160.h"
 // #include "sensors/encoder.h"
-// #include "sensors/bmi160.h"
+ #include "sensors/tof_vl53l1x.h"
 
  #include "extra/leds.h"
  #include "extra/switches.h"
@@ -37,6 +37,8 @@ private:
 	 std::shared_ptr<SENSORS::TOF_VL53L1X> tof_frontright;
 	 std::shared_ptr<SENSORS::TOF_VL53L1X> tof_right;
 
+	 std::shared_ptr<SENSORS::BMI160> bmi160;
+
 	 std::shared_ptr<EXTRA::LEDS> leds;
 	 std::shared_ptr<EXTRA::Switches> switches;
 
@@ -51,6 +53,7 @@ public:
 			 std::shared_ptr<SENSORS::TOF_VL53L1X> tof_frontleft,
 			 std::shared_ptr<SENSORS::TOF_VL53L1X> tof_frontright,
 			 std::shared_ptr<SENSORS::TOF_VL53L1X> tof_right,
+			 std::shared_ptr<SENSORS::BMI160> bmi160,
 			 std::shared_ptr<EXTRA::LEDS> leds,
 			 std::shared_ptr<EXTRA::Switches> switches);
 	virtual ~Platform() = default;
