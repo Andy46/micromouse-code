@@ -31,7 +31,7 @@ void Platform::init()
 
 }
 
-#define TEST_TOFS
+//#define TEST_TOFS
 #define TEST_LEDS
 #define TEST_SWITCHES
 #define TEST_BMI
@@ -46,6 +46,12 @@ void Platform::run_test()
 	tof_frontright->turnOff();
 	tof_right->turnOff();
 	HAL_Delay(10);
+    
+	//	tof_1->configure();
+	//	tof_2->configure();
+	//	tof_3->configure();
+	//	tof_4->configure();
+
 
 	if (tof_left)
 	{
@@ -55,10 +61,13 @@ void Platform::run_test()
 		tof_left->init();
 		HAL_Delay(20);
 		tof_left->StartRanging();
-		for (int i=0; i<20; i++)
-		{
-			tof_left->printDistance();
-		}
+
+//		SENSORS::TOF_VL53L1X::Result_t result;
+//		for (int i=0; i<20; i++)
+//		{
+//			tof_left->getData(result);
+//			printf("%u, %u, %u, %u, %u\n", result.status, result.distance, result.sigPerSPAD, result.ambient, result.numSPADs);
+//		}
 		tof_left->turnOff();
 		HAL_Delay(100);
 	}
@@ -155,6 +164,8 @@ void Platform::run_test()
 	{
 		printf("Testing BMI160!\n");
 		bmi160->init();
+        bmi160->configure();
+
 	    struct bmi160_sensor_data gyro_data;
 
 	    int64_t cal_sum = 0;

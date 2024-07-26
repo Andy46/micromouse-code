@@ -7,28 +7,32 @@
 
 #include "hardware/sensors/bmi160.h"
 
-/* C/C++ libraries */
+/* C/C++ includes */
 #include <stdio.h>
-
-#define BMI160_CS_PORT GPIOB
-#define BMI160_CS_PIN  GPIO_PIN_1
 
 #undef DEBUG
 
 namespace
 {
-constexpr int CALIBRATION_READS = 1000;
 
-#define BMI_COUNT 1
+// Data structure to be able to send/receive data in the callback functions
 struct bmi_cb_data_t
 {
 	std::shared_ptr<HARDWARE::COMMS::SPI> spi;
 	std::shared_ptr<HARDWARE::EXTRA::GPIO> cs;
 };
-struct bmi_cb_data_t bmi_cbs [BMI_COUNT];
+
+constexpr int BMI_MAX_COUNT = 1;
+struct bmi_cb_data_t bmi_cbs [BMI_MAX_COUNT];
+
+// Counter to keep track of the created BMI objects
 static uint8_t bmi_created_count = 0;
 
-// I2C Callbacks
+// Callback functions for BMI160 library
+
+/*
+ * Callback to read function
+ */
 int8_t bmi160spi_read_cb (uint8_t dev_addr, uint8_t reg_addr, uint8_t *read_data, uint16_t len)
 {
 #ifdef DEBUG
@@ -38,19 +42,15 @@ int8_t bmi160spi_read_cb (uint8_t dev_addr, uint8_t reg_addr, uint8_t *read_data
     printf("Len: %d\n", len);
 #endif
     // Activate SPI chip select line
-//    HAL_GPIO_WritePin(BMI160_CS_PORT, BMI160_CS_PIN, GPIO_PIN_RESET);
     bmi_cbs[dev_addr].cs->clear();
 
     // Send command
-//    HAL_SPI_Transmit(&hspi1, &reg_addr, sizeof(reg_addr), 1000);
     bmi_cbs[dev_addr].spi->send(&reg_addr, sizeof(reg_addr), 1000);
 
     // Receive data
-//    HAL_SPI_Receive(&hspi1, read_data, len, 1000);
     bmi_cbs[dev_addr].spi->receive(read_data, len, 1000);
 
     // Deactivate SPI chip select line
-//    HAL_GPIO_WritePin(BMI160_CS_PORT, BMI160_CS_PIN, GPIO_PIN_SET);
     bmi_cbs[dev_addr].cs->set();
 
     return 0;
@@ -72,14 +72,11 @@ int8_t bmi160spi_write_cb (uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, ui
 
     // Activate SPI chip select line
     bmi_cbs[dev_addr].cs->clear();
-//    HAL_GPIO_WritePin(BMI160_CS_PORT, BMI160_CS_PIN, GPIO_PIN_RESET);
 
     // Send buffer
-//    HAL_SPI_Transmit(&hspi1, buffer, sizeof(buffer), 1000);
     bmi_cbs[dev_addr].spi->send(buffer, sizeof(buffer), 1000);
 
     // Deactivate SPI chip select line
-//    HAL_GPIO_WritePin(BMI160_CS_PORT, BMI160_CS_PIN, GPIO_PIN_SET);
     bmi_cbs[dev_addr].cs->set();
 
     return 0;
@@ -90,13 +87,11 @@ void bmi160spi_delay_ms_cb (uint32_t period_ms)
     HAL_Delay(period_ms);
 }
 
-
-}
+} /* namespace */
 
 namespace HARDWARE::SENSORS
 {
 
-//BMI160::BMI160(SPI_HandleTypeDef* spi, GPIO_TypeDef * gpio, uint16_t pin)
 BMI160::BMI160(std::shared_ptr<COMMS::SPI> spi, std::shared_ptr<EXTRA::GPIO> cs) :
 		spi(spi), cs(cs)
 {
@@ -136,26 +131,18 @@ int8_t BMI160::init()
     {
     	printf("Error initializing BMI160!\n");
         status = 1;
+        // TODO: Throw exception???
         return status;
     }
-//
-//	/* Calibrate */
-//
-//	int64_t sum = 0;
-//	struct bmi160_sensor_data gyro_data;
-//
-//	for (int i=0; i<CALIBRATION_READS; i++)
-//	{
-//		read_gyro(&gyro_data);
-//		sum += gyro_data.z;
-//		printf("%d - %lld\n",gyro_data.z, sum);
-//		HAL_Delay(10);
-//	}
-//
-//	calibrationZ = sum / CALIBRATION_READS;
 
-	/* Configure */
+    return status;
+}
 
+int8_t BMI160::configure()
+{
+    // TODO: Configure
+
+	int8_t status = 0;
     /* Select the Output data rate, range of accelerometer sensor */
     bmi160dev.accel_cfg.odr   = BMI160_ACCEL_ODR_100HZ;
     bmi160dev.accel_cfg.range = BMI160_ACCEL_RANGE_4G;
@@ -182,15 +169,17 @@ int8_t BMI160::init()
     {
     	printf("Error configuring BMI160!");
         status = -1;
+        // TODO: Throw exception???
     }
+
     return status;
 }
-
 
 int8_t BMI160::read_accel(struct bmi160_sensor_data* accel_data)
 {
 	if (accel_data == NULL)
 	{
+        // TODO: Throw exception???
 		return -1;
 	}
 
@@ -202,6 +191,7 @@ int8_t BMI160::read_gyro(struct bmi160_sensor_data* gyro_data)
 {
 	if (gyro_data == NULL)
 	{
+        // TODO: Throw exception???
 		return -1;
 	}
 
@@ -213,6 +203,7 @@ int8_t BMI160::read_all(struct bmi160_sensor_data* accel_data, struct bmi160_sen
 {
 	if (accel_data == NULL || gyro_data == NULL)
 	{
+        // TODO: Throw exception???
 		return -1;
 	}
 

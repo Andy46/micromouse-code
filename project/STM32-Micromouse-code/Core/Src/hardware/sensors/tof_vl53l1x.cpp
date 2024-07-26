@@ -86,4 +86,16 @@ void TOF_VL53L1X::printDistance()
 	printf("%u, %u, %u, %u, %u\n", result.status, result.distance, result.sigPerSPAD, result.ambient, result.numSPADs);
 }
 
+void TOF_VL53L1X::getData(Result_t &result)
+{
+	uint8_t dataReady = 0;
+
+	while (dataReady == 0){
+		CheckForDataReady(&dataReady);
+		HAL_Delay(2);
+	}
+    GetResult(&result);
+	ClearInterrupt(); /* clear interrupt has to be called to enable next interrupt*/
+}
+
 }

@@ -32,15 +32,6 @@ private:
 	int8_t I2C_RdByte(uint16_t index, uint8_t *data);
 	int8_t I2C_RdWord(uint16_t index, uint16_t *data);
 
-	// VL53L1X_API calls
-    typedef struct {
-        uint8_t status;		/*!< ResultStatus */
-        uint16_t distance;	/*!< ResultDistance */
-        uint16_t ambient;	/*!< ResultAmbient */
-        uint16_t sigPerSPAD;/*!< ResultSignalPerSPAD */
-        uint16_t numSPADs;	/*!< ResultNumSPADs */
-    } Result_t;
-
 	int8_t SensorInit();
 
 	int8_t ClearInterrupt();
@@ -95,6 +86,15 @@ public:
 		LONG,
 	};
 
+	// VL53L1X_API calls
+    typedef struct {
+        uint8_t status;		/*!< ResultStatus */
+        uint16_t distance;	/*!< ResultDistance */
+        uint16_t ambient;	/*!< ResultAmbient */
+        uint16_t sigPerSPAD;/*!< ResultSignalPerSPAD */
+        uint16_t numSPADs;	/*!< ResultNumSPADs */
+    } Result_t;
+
 	// Pin functions
 	void turnOn();
 	void turnOff();
@@ -108,6 +108,8 @@ public:
 
 	int8_t StartRanging();
     int8_t GetResult(Result_t *pResult);
+
+    void getData(Result_t &result);
 
 //	void print();
 

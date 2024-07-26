@@ -21,22 +21,26 @@
 namespace HARDWARE::SENSORS
 {
 
+/**
+ * External device "BMI160" - IMU (Accelerometer + Gyroscope)
+ *
+ * Description: Provides accelerometer and gyroscope data from BMI160 sensor through the SPI interface
+ *
+ * Datasheet: https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmi160-ds000.pdf
+ **/
 class BMI160
 {
 private:
 	std::shared_ptr<COMMS::SPI> spi;
 	std::shared_ptr<EXTRA::GPIO> cs;
 	struct bmi160_dev bmi160dev;
-	int16_t calibrationZ = 0;
-
-//	GPIO_TypeDef* gpio;
-//	uint16_t      pin;
 
 public:
 	BMI160(std::shared_ptr<COMMS::SPI> spi, std::shared_ptr<EXTRA::GPIO> cs);
 	virtual ~BMI160() = default;
 
 	int8_t init();
+	int8_t configure();
 
 	int8_t read_accel(struct bmi160_sensor_data* accel_data);
 	int8_t read_gyro(struct bmi160_sensor_data* gyro_data);
