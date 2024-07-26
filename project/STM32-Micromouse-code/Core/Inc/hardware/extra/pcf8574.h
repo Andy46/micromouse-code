@@ -10,11 +10,19 @@
 #include <memory>
 
 #include "hardware/comms/i2c.h"
+#include "hardware/extra/gpio.h"
 
 namespace HARDWARE::EXTRA
 {
 
-class PCF8574 : public std::enable_shared_from_this<PCF8574>
+/**
+ * External device "PCF8474" - GPIO expander
+ *
+ * Description: Provides control over 8 GPIOs through an I2C interface
+ *
+ * Datasheet: https://www.ti.com/lit/ds/symlink/pcf8574.pdf
+ **/
+class PCF8574 final : public std::enable_shared_from_this<PCF8574>
 {
 private:
 	std::shared_ptr<COMMS::I2C> i2c;
@@ -25,6 +33,27 @@ private:
 
 	void sendValues(uint8_t values);
 	uint8_t readValues();
+
+	/**
+	 *  Interface to control an individual pin of the GPIO expander
+	 **/
+	class PCF8574_GPIO final : public GPIO
+	{
+	private:
+		std::shared_ptr<PCF8574> expander;
+		const uint8_t            pin;
+
+	public:
+		PCF8574_GPIO(std::shared_ptr<PCF8574> expander, const uint8_t pin);
+		PCF8574_GPIO(PCF8574_GPIO&) = delete;
+		PCF8574_GPIO(PCF8574_GPIO&&) = default;
+		virtual ~PCF8574_GPIO() = default;
+
+		GPIO::State read() override;
+
+		void set() override;
+		void clear() override;
+	};
 
 public:
 	PCF8574(std::shared_ptr<COMMS::I2C> i2c, const COMMS::I2CAddress_t address);
@@ -38,28 +67,13 @@ public:
 	uint8_t readAll();
 
 	// Read/write individual pins
-	void writePin(const uint8_t pin, const uint8_t values);
-	uint8_t readPin(const uint8_t pin);
+	void writePin(const uint8_t pin, const bool values);
+	bool readPin(const uint8_t pin);
 
-	/* GPIO from expander */
-	class GPIO
-	{
-	private:
-		std::shared_ptr<PCF8574> expander;
-		const uint8_t            pin;
-
-		friend class HARDWARE::EXTRA::PCF8574;
-
-	public:
-		GPIO(std::shared_ptr<PCF8574> expander, const uint8_t pin);
-		GPIO(GPIO&) = delete;
-		GPIO(GPIO&&) = default;
-		virtual ~GPIO() = default;
-
-		void set();
-		void clear();
-	};
-
+	/**
+	 * Returns a GPIO interface to read, set and clear a single pin of the
+	 * GPIO expander
+	 */
 	std::unique_ptr<GPIO> getGPIO(uint8_t pin);
 };
 

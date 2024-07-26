@@ -7,26 +7,40 @@
 
 #pragma once
 
-#include "stm32f1xx_hal.h"
-#include "stm32f1xx_hal_gpio.h"
-
 namespace HARDWARE::EXTRA
 {
 
-class GPIO
-{
-private:
-	GPIO_TypeDef* port;
-	const uint16_t      pin;
+	/**
+	 * GPIO Interface class
+	 */
+	class GPIO
+	{
+	private:
 
-public:
-	GPIO(GPIO_TypeDef* port, const uint16_t pin);
-	virtual ~GPIO() = default;
+	public:
+		GPIO() = default;
+		virtual ~GPIO() = default;
 
-	uint8_t read();
+		enum State
+		{
+			LOW = 0,
+			HIGH
+		};
 
-	void set();
-	void clear();
-};
+		/**
+		 * Returns the state of the GPIO
+		 */
+		virtual State read() = 0;
+
+		/**
+		 * Sets the GPIO to LOW/OFF/0
+		 */
+		virtual void clear() = 0;
+
+		/**
+		 * Sets the GPIO to HIGH/ON/1
+		 */
+		virtual void set() = 0;
+	};
 
 } /* namespace HARDWARE::EXTRA */

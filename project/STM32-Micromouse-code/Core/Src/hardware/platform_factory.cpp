@@ -41,12 +41,9 @@
 #include "hardware/extra/pcf8574.h"
 #include "hardware/extra/leds.h"
 #include "hardware/extra/switches.h"
-#include "hardware/extra/gpio.h"
-//#include "hardware/extra/gpio_direct.h"
-//#include "hardware/extra/gpio_expand.h"
+#include "hardware/extra/stm32_gpio.h"
 
 //#include "hardware/platform_defs.h"
-
 
 namespace HARDWARE
 {
@@ -54,16 +51,29 @@ namespace HARDWARE
 Platform PlatformFactory::CreatePlatform()
 {
 
-	// Peripherals
+	/******************/
+	/* Communications */
+	/******************/
+
+	// I2C
 	auto i2c1 = std::make_shared<COMMS::I2C>(hi2c1);
 	auto i2c2 = std::make_shared<COMMS::I2C>(hi2c2);
 
+	// SPI
 	auto spi1 = std::make_shared<COMMS::SPI>(hspi1);
 	auto spi2 = std::make_shared<COMMS::SPI>(hspi2);
 
+	// UART
 	auto usart1 = std::make_shared<COMMS::UART>(huart1);
 
-	// Devices
+	// Bluetooth
+	// TODO: Implement and instantiante BLUETOOTH interface (only interface (send and receive)
+
+	/***********/
+	/* Devices */
+	/***********/
+
+	// GPIO expanders
 	auto tof_expander = std::make_shared<EXTRA::PCF8574>(i2c2, GPIOEXPANDER_TOF_ADDRESS);
 	tof_expander->configAll(0x55); // 7-6 TOF Left       (Int-XShut), 5-4 TOF FrontLeft (Int-XShut),
                                    // 3-2 TOF FrontRight (Int-XShut), 1-0 TOF Right     (Int-XShut)
@@ -77,6 +87,10 @@ Platform PlatformFactory::CreatePlatform()
 	auto leds     = std::make_shared<EXTRA::LEDS>(ledsw_expander);
 	auto switches = std::make_shared<EXTRA::Switches>(ledsw_expander);
 
+	/***********/
+	/* Sensors */
+	/***********/
+
 	// TOFs
 	auto tof_1 = std::make_shared<SENSORS::TOF_VL53L1X>(i2c2, tof_expander->getGPIO(GPIOEXPANDER_TOF_TOF0_XSHUT_PIN));
 	auto tof_2 = std::make_shared<SENSORS::TOF_VL53L1X>(i2c2, tof_expander->getGPIO(GPIOEXPANDER_TOF_TOF1_XSHUT_PIN));
@@ -84,7 +98,7 @@ Platform PlatformFactory::CreatePlatform()
 	auto tof_4 = std::make_shared<SENSORS::TOF_VL53L1X>(i2c2, tof_expander->getGPIO(GPIOEXPANDER_TOF_TOF3_XSHUT_PIN));
 
 	// BMI160
-	auto bmi_cs = std::make_shared<EXTRA::GPIO> (GPIOB, GPIO_PIN_12);
+	auto bmi_cs = std::make_shared<EXTRA::STM32_GPIO> (GPIOB, GPIO_PIN_12);
 	auto bmi = std::make_shared<SENSORS::BMI160>(spi1, bmi_cs);
 
 	// Create the platform and return it

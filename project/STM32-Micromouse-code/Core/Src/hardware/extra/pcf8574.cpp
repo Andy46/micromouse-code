@@ -28,7 +28,7 @@ inline void setBitHigh(uint8_t& reg, uint8_t pin)
 	reg |= mask;
 }
 
-inline void setBit(uint8_t& reg, uint8_t bit, uint8_t value)
+inline void setBit(uint8_t& reg, uint8_t bit, bool value)
 {
 	if (value)
 	{
@@ -40,10 +40,10 @@ inline void setBit(uint8_t& reg, uint8_t bit, uint8_t value)
 	}
 }
 
-inline uint8_t getBit(uint8_t reg, uint8_t bit)
+inline bool getBit(uint8_t reg, uint8_t bit)
 {
 	const uint8_t mask = (1 << bit);
-	uint8_t value = (reg & mask) ? 1 : 0;
+	uint8_t value = (reg & mask) ? true : false;
 	return value;
 }
 
@@ -93,7 +93,7 @@ uint8_t PCF8574::readAll()
 }
 
 // Read/write individual pins
-void PCF8574::writePin(const uint8_t pin, const uint8_t value)
+void PCF8574::writePin(const uint8_t pin, const bool value)
 {
 	const uint8_t inputMask = ~configuration;
 	// TODO: Protect with mutex
@@ -105,7 +105,7 @@ void PCF8574::writePin(const uint8_t pin, const uint8_t value)
 	}
 }
 
-uint8_t PCF8574::readPin(const uint8_t pin)
+bool PCF8574::readPin(const uint8_t pin)
 {
 	// TODO: Protect with mutex
 	if (pin < PCF8574_PIN_COUNT)
@@ -116,26 +116,9 @@ uint8_t PCF8574::readPin(const uint8_t pin)
 	return 0;
 }
 
-std::unique_ptr<PCF8574::GPIO> PCF8574::getGPIO(uint8_t pin)
+std::unique_ptr<GPIO> PCF8574::getGPIO(uint8_t pin)
 {
-	return std::make_unique<PCF8574::GPIO>(shared_from_this(), pin);
-}
-
-/* GPIO from expander */
-PCF8574::GPIO::GPIO(std::shared_ptr<PCF8574> expander, const uint8_t pin) :
-		expander(expander), pin(pin)
-{
-
-}
-
-void PCF8574::GPIO::set()
-{
-	expander->writePin(pin, 1);
-}
-
-void PCF8574::GPIO::clear()
-{
-	expander->writePin(pin, 0);
+	return std::make_unique<PCF8574::PCF8574_GPIO>(shared_from_this(), pin);
 }
 
 } /* namespace HARDWARE::EXTRA */

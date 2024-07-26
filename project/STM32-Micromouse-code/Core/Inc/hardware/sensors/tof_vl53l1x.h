@@ -18,9 +18,9 @@ private:
 
 //	static VL53L1_RangingMeasurementData_t RangingData;
 
-	std::shared_ptr<COMMS::I2C>           i2c;
-	std::unique_ptr<EXTRA::PCF8574::GPIO> xshut_pin;
-	uint16_t                              address;
+	std::shared_ptr<COMMS::I2C>  i2c;
+	std::unique_ptr<EXTRA::GPIO> xshut_pin;
+	uint16_t                     address;
 
 	// VL53L1X_Platform calls
 	int _I2CWrite(uint8_t *pdata, uint32_t count);
@@ -87,7 +87,7 @@ private:
 
 public:
 	TOF_VL53L1X(std::shared_ptr<COMMS::I2C> i2c,
-				std::unique_ptr<EXTRA::PCF8574::GPIO> xshut_pin);
+				std::unique_ptr<EXTRA::GPIO> xshut_pin);
 	virtual ~TOF_VL53L1X() = default;
 
 	enum MODE {

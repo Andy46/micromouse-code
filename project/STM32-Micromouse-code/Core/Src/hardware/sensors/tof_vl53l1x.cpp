@@ -20,7 +20,7 @@ constexpr uint16_t DEFAULT_TOF_ADDRESS = 0x29;
 namespace HARDWARE::SENSORS
 {
 TOF_VL53L1X::TOF_VL53L1X(std::shared_ptr<COMMS::I2C> i2c,
-						std::unique_ptr<EXTRA::PCF8574::GPIO> xshut_pin) :
+						std::unique_ptr<EXTRA::GPIO> xshut_pin) :
 		i2c(i2c), xshut_pin(std::move(xshut_pin)), address (DEFAULT_TOF_ADDRESS)
 {
 

@@ -22,7 +22,7 @@ LEDS::LEDS(std::shared_ptr<PCF8574> expander) : expander(expander)
 
 }
 
-void LEDS::set(const uint8_t led, const uint8_t value)
+void LEDS::set(const uint8_t led, const bool value)
 {
 	if (led < LED_COUNT)
 	{
@@ -30,7 +30,7 @@ void LEDS::set(const uint8_t led, const uint8_t value)
 	}
 }
 
-uint8_t LEDS::get(const uint8_t led)
+bool LEDS::get(const uint8_t led)
 {
 	if (led < LED_COUNT)
 	{

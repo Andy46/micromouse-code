@@ -19,8 +19,8 @@ class LEDS
 private:
 	std::shared_ptr<PCF8574> expander;
 
-	inline void set(const uint8_t led, const uint8_t value);
-	inline uint8_t get(const uint8_t led);
+	inline void set(const uint8_t led, const bool value);
+	inline bool get(const uint8_t led);
 
 public:
 	LEDS(std::shared_ptr<PCF8574> expander);
