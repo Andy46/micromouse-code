@@ -31,7 +31,7 @@ void Platform::init()
 
 }
 
-//#define TEST_TOFS
+#define TEST_TOFS
 #define TEST_LEDS
 #define TEST_SWITCHES
 #define TEST_BMI
@@ -55,26 +55,27 @@ void Platform::run_test()
 
 	if (tof_left)
 	{
-		printf("Left TOF!\n");
+        printf("\n\n=== Testing Left TOF ===\n");
 		tof_left->turnOn();
 		HAL_Delay(20);
 		tof_left->init();
 		HAL_Delay(20);
 		tof_left->StartRanging();
 
-//		SENSORS::TOF_VL53L1X::Result_t result;
-//		for (int i=0; i<20; i++)
-//		{
-//			tof_left->getData(result);
-//			printf("%u, %u, %u, %u, %u\n", result.status, result.distance, result.sigPerSPAD, result.ambient, result.numSPADs);
-//		}
+		SENSORS::TOF_VL53L1X::Result_t result;
+        printf("Statu;Dista;sSPAD;ambie;nSPAD\n");
+		for (int i=0; i<10; i++)
+		{
+			tof_left->getData(result);
+			printf("%5u;%5u;%5u;%5u;%5u\n", result.status, result.distance, result.sigPerSPAD, result.ambient, result.numSPADs);
+		}
 		tof_left->turnOff();
 		HAL_Delay(100);
 	}
 
 //	if (tof_frontleft)
 //	{
-//		printf("Front-left TOF!\n");
+//      printf("\n\n=== Testing Front-left TOF ===\n");
 //		tof_frontleft->turnOn();
 //		HAL_Delay(20);
 //		tof_frontleft->init();
@@ -90,7 +91,7 @@ void Platform::run_test()
 //
 //	if (tof_frontright)
 //	{
-//		printf("Front-right TOF!\n");
+//      printf("\n\n=== Testing Front-right TOF ===\n");
 //		tof_frontright->turnOn();
 //		HAL_Delay(20);
 //		tof_frontright->init();
@@ -106,7 +107,7 @@ void Platform::run_test()
 //
 //	if (tof_right)
 //	{
-//		printf("Right TOF!\n");
+//      printf("\n\n=== Testing Right TOF ===\n");
 //		tof_right->turnOn();
 //		HAL_Delay(20);
 //		tof_right->init();
@@ -124,6 +125,7 @@ void Platform::run_test()
 #ifdef TEST_LEDS
 	if (leds)
 	{
+		printf("\n\n=== Testing LEDs ===\n");
 		for (int i=0; i<LED_COUNT; i++)
 		{
 			printf("Turn LED %d: ON\n", i);
@@ -148,6 +150,7 @@ void Platform::run_test()
 #ifdef TEST_SWITCHES
 	if (switches)
 	{
+		printf("\n\n=== Testing Switches ===\n");
 		for (int i=0; i<SW_COUNT; i++)
 		{
 			uint8_t sw = switches->get(i);
@@ -162,50 +165,26 @@ void Platform::run_test()
 #ifdef TEST_BMI
 	if(bmi160)
 	{
-		printf("Testing BMI160!\n");
+		printf("\n\n=== Testing BMI160 ===\n");
 		bmi160->init();
         bmi160->configure();
 
+	    struct bmi160_sensor_data accel_data;
+        printf("TimeS;AcceX;AcceY;AcceZ\n");
+		for (int i=0; i<10; i++)
+	    {
+            bmi160->read_accel(accel_data);
+            printf("%5lu;%5d;%5d;%5d\n", accel_data.sensortime, accel_data.x, accel_data.y, accel_data.z);
+        }
+
 	    struct bmi160_sensor_data gyro_data;
-
-	    int64_t cal_sum = 0;
-	    for (int i = 0; i < 100; i++)
+        printf("\nTimeS;GyroX;GyroY;GyroZ\n");
+		for (int i=0; i<10; i++)
 	    {
-	    	bmi160->read_gyro(&gyro_data);
-	    	cal_sum += gyro_data.z;
-	    }
-
-	    int16_t calZ = cal_sum / 100;
-
-	    printf("Calibration is: %d\n", calZ);
-
-	    uint32_t lastTime;
-	    uint32_t firstRun = 1;
-	    float x_deg = 0;
-	    constexpr int SENSITIVITY = 50;
-	    while (1)
-	    {
-	        for (int i = 0; i < SENSITIVITY; i++)
-	        {
-	        	bmi160->read_gyro(&gyro_data);
-	//            printf("GYRO:%-5d;%-5d;%-5d\n", gyro_data.x, gyro_data.y, gyro_data.z-calZ);
-	//            printf("Time: %lu\n", gyro_data.sensortime);
-	            if (firstRun == 1)
-	            {
-	                lastTime = gyro_data.sensortime;
-	                firstRun = 0;
-	            }
-	//            printf("Delta : %lu", gyro_data.sensortime -lastTime);
-	            if (abs(gyro_data.z) > 15)
-	            {
-	                x_deg += (gyro_data.z) * 0.061 * ((gyro_data.sensortime - lastTime) * 0.000039f);
-	            }
-	            lastTime = gyro_data.sensortime;
-	        }
-	        printf("%5d - %3.3f\n", gyro_data.z, x_deg);
-	    }
-
-	}
+            bmi160->read_gyro(gyro_data);
+            printf("%5lu;%5d;%5d;%5d\n", gyro_data.sensortime, gyro_data.x, gyro_data.y, gyro_data.z);
+        }
+ 	}
 	HAL_Delay(500);
 #endif
 

@@ -10,10 +10,15 @@
 /* C/C++ includes */
 #include <stdio.h>
 
+#include "hardware/utils/time.h"
+
 #undef DEBUG
 
 namespace
 {
+
+constexpr uint16_t CS_RESET_DELAY_US = 10;
+constexpr uint16_t CS_SET_DELAY_US = 10;
 
 // Data structure to be able to send/receive data in the callback functions
 struct bmi_cb_data_t
@@ -33,7 +38,7 @@ static uint8_t bmi_created_count = 0;
 /*
  * Callback to read function
  */
-int8_t bmi160spi_read_cb (uint8_t dev_addr, uint8_t reg_addr, uint8_t *read_data, uint16_t len)
+int8_t bmi160spi_read_cb (uint8_t dev_addr, uint8_t reg_addr, uint8_t *read_data, uint16_t len) noexcept
 {
 #ifdef DEBUG
     printf("Reading from SPI!\n");
@@ -41,22 +46,33 @@ int8_t bmi160spi_read_cb (uint8_t dev_addr, uint8_t reg_addr, uint8_t *read_data
     printf("reg: 0x%x\n", reg_addr);
     printf("Len: %d\n", len);
 #endif
-    // Activate SPI chip select line
-    bmi_cbs[dev_addr].cs->clear();
 
-    // Send command
-    bmi_cbs[dev_addr].spi->send(&reg_addr, sizeof(reg_addr), 1000);
+    try{
+        // Activate SPI chip select line
+        bmi_cbs[dev_addr].cs->clear();
+        // HAL_Delay(10);
+        HAL_Delay_us(CS_RESET_DELAY_US);
 
-    // Receive data
-    bmi_cbs[dev_addr].spi->receive(read_data, len, 1000);
+        // Send command
+        bmi_cbs[dev_addr].spi->send(&reg_addr, sizeof(reg_addr));
 
-    // Deactivate SPI chip select line
-    bmi_cbs[dev_addr].cs->set();
+        // Receive data
+        bmi_cbs[dev_addr].spi->receive(read_data, len);
+
+        // Deactivate SPI chip select line
+        bmi_cbs[dev_addr].cs->set();
+        HAL_Delay_us(CS_SET_DELAY_US);
+        
+    }catch(...)
+    {
+        printf("BMI160: Error receiving from SPI!\n");
+        return 1;
+    }
 
     return 0;
 }
 
-int8_t bmi160spi_write_cb (uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len)
+int8_t bmi160spi_write_cb (uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len) noexcept
 {
 #ifdef DEBUG
     printf("Writing to SPI!\n");
@@ -65,24 +81,34 @@ int8_t bmi160spi_write_cb (uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, ui
     printf("Len: %d\n", len);
 #endif
 
-    // Compose transmission buffer (address + data)
-    uint8_t buffer[len+1];
-    buffer[0] = reg_addr;
-    memcpy(&(buffer[1]), data, len);
+    try{
+        // Compose transmission buffer (address + data)
+        uint8_t buffer[len+1];
+        buffer[0] = reg_addr;
+        memcpy(&(buffer[1]), data, len);
 
-    // Activate SPI chip select line
-    bmi_cbs[dev_addr].cs->clear();
+        // Activate SPI chip select line
+        bmi_cbs[dev_addr].cs->clear();
+        // HAL_Delay(10);
+        HAL_Delay_us(CS_RESET_DELAY_US);
 
-    // Send buffer
-    bmi_cbs[dev_addr].spi->send(buffer, sizeof(buffer), 1000);
+        // Send buffer
+        bmi_cbs[dev_addr].spi->send(buffer, sizeof(buffer));
 
-    // Deactivate SPI chip select line
-    bmi_cbs[dev_addr].cs->set();
+        // Deactivate SPI chip select line
+        bmi_cbs[dev_addr].cs->set();
+        HAL_Delay_us(CS_SET_DELAY_US); // TODO: If mode is normal 2us, if not 450us
+
+    }catch(...)
+    {
+        printf("BMI160: Error receiving from SPI!\n");
+        return 1;
+    }
 
     return 0;
 }
 
-void bmi160spi_delay_ms_cb (uint32_t period_ms)
+void bmi160spi_delay_ms_cb (uint32_t period_ms) noexcept
 {
     HAL_Delay(period_ms);
 }
@@ -93,7 +119,7 @@ namespace HARDWARE::SENSORS
 {
 
 BMI160::BMI160(std::shared_ptr<COMMS::SPI> spi, std::shared_ptr<EXTRA::GPIO> cs) :
-		spi(spi), cs(cs)
+		DEVICE(), spi(spi), cs(cs)
 {
 	// ID is used to identify device in callback functions
     bmi160dev.id = bmi_created_count;
@@ -116,33 +142,27 @@ BMI160::BMI160(std::shared_ptr<COMMS::SPI> spi, std::shared_ptr<EXTRA::GPIO> cs)
     bmi_created_count++;
 }
 
-int8_t BMI160::init()
+void BMI160::init()
 {
-	int8_t status = 0;
+  // Initialize sensor using library
+    printf("BMI160: Initializing!\n");
 
-    // Initialize sensor using library
-    status = bmi160_init(&bmi160dev);
-    if (status == BMI160_OK)
+	int8_t status = bmi160_init(&bmi160dev);
+    if (status != BMI160_OK)
     {
-        printf("BMI160 initialized!\n");
-        printf("Chip ID 0x%x\n", bmi160dev.chip_id);
-    }
-    else
-    {
-    	printf("Error initializing BMI160!\n");
-        status = 1;
-        // TODO: Throw exception???
-        return status;
+        printf("BMI160: NOT OK %d!\n", status);
+        DEVICE::setError();
+        throw InitializationException(BMI160_ERROR);
     }
 
-    return status;
+    DEVICE::setInitialized();
+    printf("BMI160: Initialized!\n");
 }
 
-int8_t BMI160::configure()
+void BMI160::configure()
 {
-    // TODO: Configure
+    // TODO: Implement proper configuration function
 
-	int8_t status = 0;
     /* Select the Output data rate, range of accelerometer sensor */
     bmi160dev.accel_cfg.odr   = BMI160_ACCEL_ODR_100HZ;
     bmi160dev.accel_cfg.range = BMI160_ACCEL_RANGE_4G;
@@ -160,55 +180,48 @@ int8_t BMI160::configure()
     bmi160dev.gyro_cfg.power = BMI160_GYRO_NORMAL_MODE;
 
     /* Set the sensor configuration */
-    status = bmi160_set_sens_conf(&bmi160dev);
-    if (status == BMI160_OK)
+    int8_t status = bmi160_set_sens_conf(&bmi160dev);
+    if (status != BMI160_OK)
     {
-    	printf("BMI160 configured!\n");
-    }
-    else
-    {
-    	printf("Error configuring BMI160!");
-        status = -1;
-        // TODO: Throw exception???
+        DEVICE::setError();
+        throw InitializationException(BMI160_ERROR);
     }
 
-    return status;
+    // Set the device ready to be used
+    DEVICE::setReady();
 }
 
-int8_t BMI160::read_accel(struct bmi160_sensor_data* accel_data)
+void BMI160::read_accel(struct bmi160_sensor_data& accel_data)
 {
-	if (accel_data == NULL)
-	{
-        // TODO: Throw exception???
-		return -1;
-	}
-
-    bmi160_get_sensor_data((BMI160_ACCEL_SEL | BMI160_TIME_SEL), accel_data, NULL, &bmi160dev);
-    return 0;
+    ASSERT_DEV_NOT_READY;
+    int8_t status = bmi160_get_sensor_data((BMI160_ACCEL_SEL | BMI160_TIME_SEL), &accel_data, NULL, &bmi160dev);
+    if (status != BMI160_OK)
+    {
+        DEVICE::setError();
+        throw FunctionalException(ERROR_CODE::BMI160_ERROR);
+    }
 }
 
-int8_t BMI160::read_gyro(struct bmi160_sensor_data* gyro_data)
+void BMI160::read_gyro(struct bmi160_sensor_data& gyro_data)
 {
-	if (gyro_data == NULL)
-	{
-        // TODO: Throw exception???
-		return -1;
-	}
-
-    bmi160_get_sensor_data((BMI160_GYRO_SEL | BMI160_TIME_SEL), NULL, gyro_data, &bmi160dev);
-    return 0;
+    ASSERT_DEV_NOT_READY;
+    int8_t status = bmi160_get_sensor_data((BMI160_GYRO_SEL | BMI160_TIME_SEL), NULL, &gyro_data, &bmi160dev);
+    if (status != BMI160_OK)
+    {
+        DEVICE::setError();
+        throw FunctionalException(ERROR_CODE::BMI160_ERROR);
+    }
 }
 
-int8_t BMI160::read_all(struct bmi160_sensor_data* accel_data, struct bmi160_sensor_data* gyro_data)
+void BMI160::read_all(struct bmi160_sensor_data& accel_data, struct bmi160_sensor_data& gyro_data)
 {
-	if (accel_data == NULL || gyro_data == NULL)
-	{
-        // TODO: Throw exception???
-		return -1;
-	}
-
-    bmi160_get_sensor_data((BMI160_ACCEL_SEL | BMI160_GYRO_SEL | BMI160_TIME_SEL), accel_data, gyro_data, &bmi160dev);
-    return 0;
+    ASSERT_DEV_NOT_READY;
+    int8_t status = bmi160_get_sensor_data((BMI160_ACCEL_SEL | BMI160_GYRO_SEL | BMI160_TIME_SEL), &accel_data, &gyro_data, &bmi160dev);
+    if (status != BMI160_OK)
+    {
+        DEVICE::setError();
+        throw FunctionalException(ERROR_CODE::BMI160_ERROR);
+    }
 }
 
 } /* namespace HARDWARE::SENSORS */
