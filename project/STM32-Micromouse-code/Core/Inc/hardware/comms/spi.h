@@ -7,29 +7,49 @@
 
 #pragma once
 
-// STM32 HAL (Hardware Abstraction Layer)
+// STM32 HAL (Hardware Abstraction Layer) includes
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_hal_spi.h"
-//#include "stm32f1xx_hal_dma.h"
+
+#include <stdint.h>
 
 namespace HARDWARE::COMMS
 {
 
-class SPI
+class SPI final
 {
 private:
 	SPI_HandleTypeDef& hspi;
-//	DMA_HandleTypeDef& hdma;
-
 
 public:
 	SPI(SPI_HandleTypeDef& hspi);
-//		SPI(SPI_HandleTypeDef& hspi, DMA_HandleTypeDef& hdma);
 
 	virtual ~SPI() = default;
 
-	int send(uint8_t* buffer, const uint16_t length, const uint32_t timeout);
-	int receive(uint8_t* buffer, const uint16_t length, const uint32_t timeout);
+	/**
+	 * send
+	 *
+	 * Send an array of bytes through the SPI bus,
+	 * Chip select of the device shall be set/clear before calling this function
+	 *
+	 * buffer  - Pointer to the data to send
+	 * length  - Size of the data to send in bytes
+	 * timeout - Timeout for the transaction
+	 */
+	int send(uint8_t* buffer, const uint16_t length, const uint32_t timeout = 100);
+
+	/**
+	 * receive
+	 *
+	 * Receive an array of bytes from the SPI bus
+	 * Chip select of the device shall be set/clear before calling this function
+	 *
+	 * buffer  - Pointer where to store the data received
+	 * length  - Size of the data to receive in bytes
+	 * timeout - Timeout for the transaction
+	 */
+	int receive(uint8_t* buffer, const uint16_t length, const uint32_t timeout = 100);
+
 };
 
 } /* namespace HARDWARE::COMMS */

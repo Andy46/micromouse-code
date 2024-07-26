@@ -48,7 +48,7 @@
 namespace HARDWARE
 {
 
-Platform PlatformFactory::CreatePlatform()
+Platform PlatformFactory::getPlatform()
 {
 
 	/******************/

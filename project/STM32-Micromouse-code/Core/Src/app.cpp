@@ -13,7 +13,7 @@
 #include "hardware/platform_factory.h"
 
 /* Hardware definition */
-
+HARDWARE::Platform platform = HARDWARE::PlatformFactory::getPlatform();
 
 void setup();
 
@@ -21,8 +21,6 @@ extern "C"
 int app_main()
 {
 	printf("Starting app!\n");
-
-	HARDWARE::Platform platform = HARDWARE::PlatformFactory::CreatePlatform();
 
 	// Initialize platform's hardware
     setup();

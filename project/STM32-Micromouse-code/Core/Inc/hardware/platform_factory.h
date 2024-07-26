@@ -12,7 +12,12 @@
 namespace HARDWARE
 {
 
-class PlatformFactory
+/**
+ * Platform Factory
+ *
+ * Factory class to create a platform object
+ */
+class PlatformFactory final
 {
 private:
 	PlatformFactory() = delete;
@@ -20,7 +25,10 @@ private:
 
 public:
 
-	static Platform CreatePlatform();
+	/**
+	 * Return the platform object, shall be called only once
+	 */
+	static Platform getPlatform();
 };
 
 } /* namespace HARDWARE */

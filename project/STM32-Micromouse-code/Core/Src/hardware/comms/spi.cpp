@@ -12,14 +12,13 @@ namespace HARDWARE::COMMS
 
 SPI::SPI(SPI_HandleTypeDef& hspi) :
 		hspi(hspi)
-{
-
-}
+{}
 
 int SPI::send(uint8_t* buffer, const uint16_t length, const uint32_t timeout)
 {
 	if (nullptr == buffer)
 	{
+		// TODO: Throw exception?
 		return -1;
 	}
 	// TODO: Add mutex protection
@@ -31,6 +30,7 @@ int SPI::receive(uint8_t* buffer, const uint16_t length, const uint32_t timeout)
 {
 	if (nullptr == buffer)
 	{
+		// TODO: Throw exception?
 		return -1;
 	}
 	// TODO: Add mutex protection

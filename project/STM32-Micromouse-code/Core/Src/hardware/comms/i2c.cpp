@@ -7,21 +7,18 @@
 
 #include "hardware/comms/i2c.h"
 
-#include <stdio.h>
-
 namespace HARDWARE::COMMS
 {
 
 I2C::I2C(I2C_HandleTypeDef& hi2c) :
 		hi2c(hi2c)
-{
-
-}
+{}
 
 int I2C::send(const I2CAddress_t address, uint8_t* buffer, const uint16_t length, const uint32_t timeout)
 {
 	if (nullptr == buffer)
 	{
+		// TODO: Throw exception?
 		return -1;
 	}
 	// TODO: Add mutex protection
@@ -33,6 +30,7 @@ int I2C::receive(const I2CAddress_t address, uint8_t* buffer, const uint16_t len
 {
 	if (nullptr == buffer)
 	{
+		// TODO: Throw exception?
 		return -1;
 	}
 	// TODO: Add mutex protection
