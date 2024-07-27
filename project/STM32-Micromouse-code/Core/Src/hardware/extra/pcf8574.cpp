@@ -71,9 +71,10 @@ uint8_t PCF8574::readValues()
 }
 
 // Configuration
-void PCF8574::configAll(const uint8_t pinModes)
+void PCF8574::configure(const uint8_t pinModes)
 {
 	configuration = pinModes;
+	DEVICE::setReady();
 }
 
 // Read/write all pins

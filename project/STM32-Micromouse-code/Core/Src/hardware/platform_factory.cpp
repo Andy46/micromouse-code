@@ -75,12 +75,12 @@ Platform PlatformFactory::getPlatform()
 
 	// GPIO expanders
 	auto tof_expander = std::make_shared<EXTRA::PCF8574>(i2c2, GPIOEXPANDER_TOF_ADDRESS);
-	tof_expander->configAll(0x55); // 7-6 TOF Left       (Int-XShut), 5-4 TOF FrontLeft (Int-XShut),
+	tof_expander->configure(0x55); // 7-6 TOF Left       (Int-XShut), 5-4 TOF FrontLeft (Int-XShut),
                                    // 3-2 TOF FrontRight (Int-XShut), 1-0 TOF Right     (Int-XShut)
 	tof_expander->writeAll(0x00);  // All OFF
 
 	auto ledsw_expander = std::make_shared<EXTRA::PCF8574>(i2c2, GPIOEXPANDER_SWLED_ADDRESS);
-	ledsw_expander->configAll(0xF0); // 7-4 SW, 3-0 LEDs
+	ledsw_expander->configure(0xF0); // 7-4 SW, 3-0 LEDs
 	ledsw_expander->writeAll(0x00);  // All OFF
 
 	// LEDS & Switches
@@ -101,8 +101,12 @@ Platform PlatformFactory::getPlatform()
 	auto bmi_cs = std::make_shared<EXTRA::STM32_GPIO> (GPIOB, GPIO_PIN_12);
 	auto bmi = std::make_shared<SENSORS::BMI160>(spi1, bmi_cs);
 
+	// PMW3360
+	auto pmw_cs = std::make_shared<EXTRA::STM32_GPIO> (GPIOC, GPIO_PIN_13);
+	auto pmw = std::make_shared<SENSORS::PMW3360>(spi1, bmi_cs);
+
 	// Create the platform and return it
-	return Platform (tof_1, tof_2, tof_3, tof_4, bmi, leds, switches);
+	return Platform (tof_1, tof_2, tof_3, tof_4, bmi, pmw, leds, switches);
 }
 
 } /* namespace HARDWARE */
