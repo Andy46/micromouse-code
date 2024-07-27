@@ -25,7 +25,6 @@ int app_main()
 	// Run tests over platform
 	platform.run_test();
 
-
 	// Application logic
 	//	platform.init();
 	//  setup();

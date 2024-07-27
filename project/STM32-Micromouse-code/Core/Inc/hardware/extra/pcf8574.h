@@ -9,6 +9,7 @@
 
 #include <memory>
 
+#include "hardware/device.h"
 #include "hardware/comms/i2c.h"
 #include "hardware/extra/gpio.h"
 
@@ -22,7 +23,7 @@ namespace HARDWARE::EXTRA
  *
  * Datasheet: https://www.ti.com/lit/ds/symlink/pcf8574.pdf
  **/
-class PCF8574 final : public std::enable_shared_from_this<PCF8574>
+class PCF8574 final : public DEVICE, public std::enable_shared_from_this<PCF8574>
 {
 private:
 	std::shared_ptr<COMMS::I2C> i2c;
@@ -60,7 +61,7 @@ public:
 	virtual ~PCF8574() = default;
 
 	// Configuration
-	void configAll(const uint8_t pinModes);
+	void configure(const uint8_t pinModes);
 
 	// Read/write all pins
 	void writeAll(const uint8_t values);

@@ -7,10 +7,12 @@
 
 #include "hardware/sensors/bmi160.h"
 
+#undef DEBUG
+
+#ifdef DEBUG
 /* C/C++ includes */
 #include <stdio.h>
-
-#undef DEBUG
+#endif
 
 namespace
 {

@@ -17,6 +17,7 @@
 
  #include "sensors/bmi160.h"
 // #include "sensors/encoder.h"
+ #include "sensors/pmw3360.h"
  #include "sensors/tof_vl53l1x.h"
 
  #include "extra/leds.h"
@@ -38,6 +39,7 @@ private:
 	 std::shared_ptr<SENSORS::TOF_VL53L1X> tof_right;
 
 	 std::shared_ptr<SENSORS::BMI160> bmi160;
+	 std::shared_ptr<SENSORS::PMW3360> pmw3360;
 
 	 std::shared_ptr<EXTRA::LEDS> leds;
 	 std::shared_ptr<EXTRA::Switches> switches;
@@ -54,6 +56,7 @@ public:
 			 std::shared_ptr<SENSORS::TOF_VL53L1X> tof_frontright,
 			 std::shared_ptr<SENSORS::TOF_VL53L1X> tof_right,
 			 std::shared_ptr<SENSORS::BMI160> bmi160,
+			 std::shared_ptr<SENSORS::PMW3360> pmw3360,
 			 std::shared_ptr<EXTRA::LEDS> leds,
 			 std::shared_ptr<EXTRA::Switches> switches);
 	virtual ~Platform() = default;

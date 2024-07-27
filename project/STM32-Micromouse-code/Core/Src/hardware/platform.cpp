@@ -8,6 +8,8 @@
 #include "hardware/platform.h"
 #include <stdio.h>
 
+#include "hardware/sensors/pmw3360.h"
+
 namespace HARDWARE
 {
 
@@ -16,12 +18,13 @@ Platform::Platform(std::shared_ptr<SENSORS::TOF_VL53L1X> tof_left,
 					 std::shared_ptr<SENSORS::TOF_VL53L1X> tof_frontright,
 					 std::shared_ptr<SENSORS::TOF_VL53L1X> tof_right,
 					 std::shared_ptr<SENSORS::BMI160> bmi160,
+					 std::shared_ptr<SENSORS::PMW3360> pmw3360,
 					 std::shared_ptr<EXTRA::LEDS> leds,
 					 std::shared_ptr<EXTRA::Switches> switches
 				   ) :
 		tof_left(tof_left), tof_frontleft(tof_frontleft),
 		tof_frontright(tof_frontright), tof_right(tof_right),
-		bmi160(bmi160), leds(leds), switches(switches)
+		bmi160(bmi160), pmw3360(pmw3360), leds(leds), switches(switches)
 {
 
 }
@@ -35,6 +38,7 @@ void Platform::init()
 #define TEST_LEDS
 #define TEST_SWITCHES
 #define TEST_BMI
+#define TEST_PMW
 
 
 void Platform::run_test()
@@ -177,6 +181,7 @@ void Platform::run_test()
 		printf("\n\n=== Testing BMI160 ===\n");
 		bmi160->init();
         bmi160->configure();
+        HAL_Delay(250);
 
 	    struct bmi160_sensor_data accel_data;
         printf("TimeS;AcceX;AcceY;AcceZ\n");
@@ -200,5 +205,40 @@ void Platform::run_test()
  	}
 #endif
 
+#ifdef TEST_PMW
+	if(pmw3360)
+	{
+		printf("\n\n=== Testing BMI160 ===\n");
+		pmw3360->init();
+		pmw3360->configure();
+
+		pmw3360->test_comms();
+
+		SENSORS::PMW3360::Result_t result;
+		int32_t X_POS = 0, Y_POS = 0;
+
+		printf("M;S;deltaX;deltaY;SQUAL;rawSum;maxData;minData;shutter;_________X-_________Y\n");
+		while(1)
+		{
+//			pmw3360->readData(result);
+			pmw3360->readDataBurst(result);
+
+			if (result.isMotion)
+			{
+				X_POS += result.dx;
+				Y_POS += result.dy;
+			}
+
+			printf("%1d;%1d;%6d;%6d;%5u;%7u;%7u;%7u;%7u;%10ld;%10ld\n",
+					result.isMotion, result.isOnSurface, result.dx, result.dy,
+					result.SQUAL, 0, 0, 0, 0,
+					X_POS, Y_POS);
+		}
+
+		printf("Sensor status: %d\n", bmi160->getStatus());
+
+		HAL_Delay(500);
+	}
+#endif
 }
 } /* namespace HARDWARE */
