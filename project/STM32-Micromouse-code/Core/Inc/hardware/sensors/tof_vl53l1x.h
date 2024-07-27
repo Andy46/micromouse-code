@@ -7,22 +7,43 @@
 
 #pragma once
 
-#include "hardware/extra/pcf8574.h"
+/* C/C++ libraries */
+#include <stdint.h>
+#include <memory>
+
+/* Platform libraries */
+#include "hardware/error.h"
+#include "hardware/device.h"
+#include "hardware/comms/i2c.h"
+#include "hardware/extra/gpio.h"
 
 namespace HARDWARE::SENSORS
 {
 
-class TOF_VL53L1X
+class TOF_VL53L1X : public DEVICE
 {
-private:
+public:
 
-//	static VL53L1_RangingMeasurementData_t RangingData;
+	enum MODE {
+		SHORT = 1,
+		LONG,
+	};
+
+    typedef struct {
+        uint8_t status;		/*!< ResultStatus */
+        uint16_t distance;	/*!< ResultDistance */
+        uint16_t ambient;	/*!< ResultAmbient */
+        uint16_t sigPerSPAD;/*!< ResultSignalPerSPAD */
+        uint16_t numSPADs;	/*!< ResultNumSPADs */
+    } Result_t;
+
+private:
 
 	std::shared_ptr<COMMS::I2C>  i2c;
 	std::unique_ptr<EXTRA::GPIO> xshut_pin;
 	uint16_t                     address;
 
-	// VL53L1X_Platform calls
+	// VL53L1X_Platform calls (IO functions)
 	int _I2CWrite(uint8_t *pdata, uint32_t count);
 	int _I2CRead(uint8_t *pdata, uint32_t count);
 	int8_t I2C_WriteMulti(uint16_t index, uint8_t *pdata, uint32_t count);
@@ -32,6 +53,7 @@ private:
 	int8_t I2C_RdByte(uint16_t index, uint8_t *data);
 	int8_t I2C_RdWord(uint16_t index, uint16_t *data);
 
+	// VL53L1X_API calls (Functionality functions)
 	int8_t SensorInit();
 
 	int8_t ClearInterrupt();
@@ -50,6 +72,8 @@ private:
 				      uint8_t IntOnNoTarget);
 	int8_t SetROI(uint16_t X, uint16_t Y);
 	int8_t SetROICenter(uint8_t ROICenter);
+    int8_t GetResult(Result_t *pResult);
+	int8_t StartRanging();
 
 	int8_t GetSensorId(uint16_t *id);
 	int8_t GetDistance(uint16_t *distance);
@@ -60,59 +84,24 @@ private:
 	int8_t GetOffset(int16_t *offset);
 	int8_t GetROI_XY(uint16_t *ROI_X, uint16_t *ROI_Y);
 
-	// Printing info
-//	void printVersion();
-//	void printI2CAddress();
-//	void printInterruptPolarity();
-//	void printTimingBudgetInMs();
-//	void printDistanceMode();
-//	void printInterMeasurementInMs();
-//	void printBootState();
-//	void printSensorId();
-//	void printOffset();
-//	void printXtalk();
-//	void printDistanceThreshold();
-//	void printROI();
-//	void printSignalThreshold();
-//	void printSigmaThreshold();
-
 public:
 	TOF_VL53L1X(std::shared_ptr<COMMS::I2C> i2c,
 				std::unique_ptr<EXTRA::GPIO> xshut_pin);
 	virtual ~TOF_VL53L1X() = default;
 
-	enum MODE {
-		SHORT = 1,
-		LONG,
-	};
-
-	// VL53L1X_API calls
-    typedef struct {
-        uint8_t status;		/*!< ResultStatus */
-        uint16_t distance;	/*!< ResultDistance */
-        uint16_t ambient;	/*!< ResultAmbient */
-        uint16_t sigPerSPAD;/*!< ResultSignalPerSPAD */
-        uint16_t numSPADs;	/*!< ResultNumSPADs */
-    } Result_t;
-
-	// Pin functions
+    // Pin functions
 	void turnOn();
 	void turnOff();
 
-	void init(MODE mode = MODE::SHORT);
-	void config(MODE mode);
+	// Configuration
+	error_t init();
+	error_t configure(MODE mode = MODE::SHORT);
+	error_t setI2CAddress(uint16_t newAddress);
 
-	void setI2CAddress(uint16_t newAddress);
-
-	void printDistance();
-
-	int8_t StartRanging();
-    int8_t GetResult(Result_t *pResult);
-
-    void getData(Result_t &result);
-
-//	void print();
-
+	// Measurements
+	error_t start();
+	bool isDataReady();
+    error_t getDataAndRestart(Result_t &result);
 };
 
 } /* namespace HARDWARE::SENSORS */

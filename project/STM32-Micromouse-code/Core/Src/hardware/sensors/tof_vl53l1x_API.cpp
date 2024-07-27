@@ -240,7 +240,6 @@ int8_t TOF_VL53L1X::BootState(uint8_t *state)
 	return status;
 }
 
-
 int8_t TOF_VL53L1X::SetI2CAddress(uint8_t new_address)
 {
 	int8_t status = 0;

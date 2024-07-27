@@ -116,33 +116,27 @@ BMI160::BMI160(std::shared_ptr<COMMS::SPI> spi, std::shared_ptr<EXTRA::GPIO> cs)
     bmi_created_count++;
 }
 
-int8_t BMI160::init()
+error_t BMI160:: init()
 {
-	int8_t status = 0;
+	int8_t status = BMI160_OK;
 
     // Initialize sensor using library
     status = bmi160_init(&bmi160dev);
-    if (status == BMI160_OK)
+    if (status != BMI160_OK)
     {
-        printf("BMI160 initialized!\n");
-        printf("Chip ID 0x%x\n", bmi160dev.chip_id);
-    }
-    else
-    {
-    	printf("Error initializing BMI160!\n");
-        status = 1;
-        // TODO: Throw exception???
-        return status;
+    	DEVICE::setError();
+    	return error_t::BMI160_ERROR;
     }
 
-    return status;
+	DEVICE::setInitialized();
+    return error_t::OK;
 }
 
-int8_t BMI160::configure()
+error_t BMI160::configure()
 {
     // TODO: Configure
+	int8_t status = BMI160_OK;
 
-	int8_t status = 0;
     /* Select the Output data rate, range of accelerometer sensor */
     bmi160dev.accel_cfg.odr   = BMI160_ACCEL_ODR_100HZ;
     bmi160dev.accel_cfg.range = BMI160_ACCEL_RANGE_4G;
@@ -161,54 +155,32 @@ int8_t BMI160::configure()
 
     /* Set the sensor configuration */
     status = bmi160_set_sens_conf(&bmi160dev);
-    if (status == BMI160_OK)
+    if (status != BMI160_OK)
     {
-    	printf("BMI160 configured!\n");
-    }
-    else
-    {
-    	printf("Error configuring BMI160!");
-        status = -1;
-        // TODO: Throw exception???
+    	DEVICE::setError();
+    	return error_t::BMI160_ERROR;
     }
 
-    return status;
+	DEVICE::setReady();
+	return error_t::OK;
 }
 
-int8_t BMI160::read_accel(struct bmi160_sensor_data* accel_data)
+error_t BMI160::read_accel(struct bmi160_sensor_data& accel_data)
 {
-	if (accel_data == NULL)
-	{
-        // TODO: Throw exception???
-		return -1;
-	}
-
-    bmi160_get_sensor_data((BMI160_ACCEL_SEL | BMI160_TIME_SEL), accel_data, NULL, &bmi160dev);
-    return 0;
+    int8_t status = bmi160_get_sensor_data((BMI160_ACCEL_SEL | BMI160_TIME_SEL), &accel_data, NULL, &bmi160dev);
+    return (status == BMI160_OK) ? error_t::OK : error_t::BMI160_ERROR;
 }
 
-int8_t BMI160::read_gyro(struct bmi160_sensor_data* gyro_data)
+error_t BMI160::read_gyro(struct bmi160_sensor_data& gyro_data)
 {
-	if (gyro_data == NULL)
-	{
-        // TODO: Throw exception???
-		return -1;
-	}
-
-    bmi160_get_sensor_data((BMI160_GYRO_SEL | BMI160_TIME_SEL), NULL, gyro_data, &bmi160dev);
-    return 0;
+	int8_t status = bmi160_get_sensor_data((BMI160_GYRO_SEL | BMI160_TIME_SEL), NULL, &gyro_data, &bmi160dev);
+    return (status == BMI160_OK) ? error_t::OK : error_t::BMI160_ERROR;
 }
 
-int8_t BMI160::read_all(struct bmi160_sensor_data* accel_data, struct bmi160_sensor_data* gyro_data)
+error_t BMI160::read_all(struct bmi160_sensor_data& accel_data, struct bmi160_sensor_data& gyro_data)
 {
-	if (accel_data == NULL || gyro_data == NULL)
-	{
-        // TODO: Throw exception???
-		return -1;
-	}
-
-    bmi160_get_sensor_data((BMI160_ACCEL_SEL | BMI160_GYRO_SEL | BMI160_TIME_SEL), accel_data, gyro_data, &bmi160dev);
-    return 0;
+	int8_t status = bmi160_get_sensor_data((BMI160_ACCEL_SEL | BMI160_GYRO_SEL | BMI160_TIME_SEL), &accel_data, &gyro_data, &bmi160dev);
+	return (status == BMI160_OK) ? error_t::OK : error_t::BMI160_ERROR;
 }
 
 } /* namespace HARDWARE::SENSORS */

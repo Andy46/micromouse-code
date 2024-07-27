@@ -12,9 +12,6 @@
 #include "hardware/platform.h"
 #include "hardware/platform_factory.h"
 
-/* Hardware definition */
-HARDWARE::Platform platform = HARDWARE::PlatformFactory::getPlatform();
-
 void setup();
 
 extern "C"
@@ -22,25 +19,20 @@ int app_main()
 {
 	printf("Starting app!\n");
 
-	// Initialize platform's hardware
-    setup();
-//	platform.init();
+	/* Hardware definition */
+	HARDWARE::Platform platform = HARDWARE::PlatformFactory::getPlatform();
+
+	// Run tests over platform
+	platform.run_test();
+
 
 	// Application logic
-	while(1)
-	{
-		printf("Start loop!\n");
-#if DEBUG
-		platform.run_test();
-#endif
-		printf("End loop!\n");
+	//	platform.init();
+	//  setup();
+	//  TBD
 
-
-
-
-	}
-
-	return -1;
+    printf("Application ended!\n");
+	return 0;
 }
 
 void setup()

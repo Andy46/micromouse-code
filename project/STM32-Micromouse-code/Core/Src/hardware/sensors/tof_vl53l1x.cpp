@@ -9,8 +9,6 @@
 
 #include "main.h"
 
-#include <stdio.h>
-
 namespace
 {
 
@@ -36,7 +34,7 @@ void TOF_VL53L1X::turnOff()
 	xshut_pin->clear();
 }
 
-void TOF_VL53L1X::init(TOF_VL53L1X::MODE mode)
+error_t TOF_VL53L1X::init()
 {
 	/* Wait for device booted */
 	uint8_t booted = 0;
@@ -46,56 +44,99 @@ void TOF_VL53L1X::init(TOF_VL53L1X::MODE mode)
 	}
 
 	/* Sensor initialization and configuration */
-	SensorInit();
-	config(mode);
+	int8_t status = SensorInit();
+    if (status != 0)
+    {
+    	DEVICE::setError();
+    	return error_t::TOF_ERROR;
+    }
+	DEVICE::setInitialized();
+	return error_t::OK;
 }
 
-void TOF_VL53L1X::config(TOF_VL53L1X::MODE mode)
+error_t TOF_VL53L1X::configure(TOF_VL53L1X::MODE mode)
 {
+	int8_t status = 0;
+
 	/* Modify the default configuration */
 	switch (mode)
 	{
 	case TOF_VL53L1X::MODE::SHORT:
-		SetDistanceMode(SHORT);
+		status = SetDistanceMode(SHORT);
 		break;
 	case TOF_VL53L1X::MODE::LONG:
-		SetDistanceMode(LONG);
+		status = SetDistanceMode(LONG);
 		break;
 	default:
-		printf("Error, mode not valid.");
-        return;
+        return error_t::TOF_ERROR;
 	}
+    if (status != 0)
+    {
+    	DEVICE::setError();
+    	return error_t::TOF_ERROR;
+    }
 
-	SetTimingBudgetInMs(15);
-    SetROI(16, 4);
+	status = SetTimingBudgetInMs(15);
+    if (status != 0)
+    {
+    	DEVICE::setError();
+    	return error_t::TOF_ERROR;
+    }
+
+	status = SetROI(16, 4);
+    if (status != 0)
+    {
+    	DEVICE::setError();
+    	return error_t::TOF_ERROR;
+    }
+
+	DEVICE::setReady();
+	return error_t::OK;
 }
 
-void TOF_VL53L1X::printDistance()
+error_t TOF_VL53L1X::start()
 {
-    Result_t result;
-	uint8_t dataReady = 0;
-
-	while (dataReady == 0){
-		CheckForDataReady(&dataReady);
-		HAL_Delay(2);
-	}
-
-    GetResult(&result);
-	ClearInterrupt(); /* clear interrupt has to be called to enable next interrupt*/
-
-	printf("%u, %u, %u, %u, %u\n", result.status, result.distance, result.sigPerSPAD, result.ambient, result.numSPADs);
+	int8_t status = StartRanging();
+    if (status != 0)
+    {
+    	DEVICE::setError();
+    	return error_t::TOF_ERROR;
+    }
+	return error_t::OK;
 }
 
-void TOF_VL53L1X::getData(Result_t &result)
+bool TOF_VL53L1X::isDataReady()
 {
 	uint8_t dataReady = 0;
 
-	while (dataReady == 0){
-		CheckForDataReady(&dataReady);
-		HAL_Delay(2);
+	int8_t status = CheckForDataReady(&dataReady);
+	if (status != 0)
+	{
+		DEVICE::setError();
 	}
-    GetResult(&result);
-	ClearInterrupt(); /* clear interrupt has to be called to enable next interrupt*/
+
+	return (dataReady != 0);
+}
+
+error_t TOF_VL53L1X::getDataAndRestart(Result_t &result)
+{
+	int8_t status = 0;
+
+    status = GetResult(&result);
+    if (status != 0)
+    {
+    	DEVICE::setError();
+    	return error_t::TOF_ERROR;
+    }
+
+    status = ClearInterrupt(); /* clear interrupt has to be called to enable next interrupt*/
+    if (status != 0)
+    {
+    	DEVICE::setError();
+    	return error_t::TOF_ERROR;
+    }
+
+	return error_t::OK;
 }
 
 }
