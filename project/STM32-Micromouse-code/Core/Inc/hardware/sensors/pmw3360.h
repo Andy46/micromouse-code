@@ -17,6 +17,10 @@
 #include "hardware/comms/spi.h"
 #include "hardware/extra/gpio.h"
 
+#ifndef PMW3360_VERSION
+#define PMW3360_VERSION 4
+#endif
+
 namespace HARDWARE::SENSORS
 {
 

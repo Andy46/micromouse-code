@@ -136,8 +136,6 @@ error_t PMW3360::test_comms()
 	readReg(REG_Product_ID, id);
 	readReg(REG_Revision_ID, rid);
 
-	printf("ID: 0x%02x\n", id);
-	printf("rID: 0x%02x\n", rid);
 	if (id == 0x42)
 	{
 		return error_t::OK;
