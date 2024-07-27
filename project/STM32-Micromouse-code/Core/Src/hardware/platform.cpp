@@ -34,10 +34,10 @@ void Platform::init()
 
 }
 
-//#define TEST_TOFS
-//#define TEST_LEDS
-//#define TEST_SWITCHES
-//#define TEST_BMI
+#define TEST_TOFS
+#define TEST_LEDS
+#define TEST_SWITCHES
+#define TEST_BMI
 #define TEST_PMW
 
 
@@ -181,6 +181,7 @@ void Platform::run_test()
 		printf("\n\n=== Testing BMI160 ===\n");
 		bmi160->init();
         bmi160->configure();
+        HAL_Delay(250);
 
 	    struct bmi160_sensor_data accel_data;
         printf("TimeS;AcceX;AcceY;AcceZ\n");
@@ -211,13 +212,16 @@ void Platform::run_test()
 		pmw3360->init();
 		pmw3360->configure();
 
+		pmw3360->test_comms();
+
 		SENSORS::PMW3360::Result_t result;
 		int32_t X_POS = 0, Y_POS = 0;
 
 		printf("M;S;deltaX;deltaY;SQUAL;rawSum;maxData;minData;shutter;_________X-_________Y\n");
 		while(1)
 		{
-			pmw3360->readData(result);
+//			pmw3360->readData(result);
+			pmw3360->readDataBurst(result);
 
 			if (result.isMotion)
 			{
@@ -227,7 +231,7 @@ void Platform::run_test()
 
 			printf("%1d;%1d;%6d;%6d;%5u;%7u;%7u;%7u;%7u;%10ld;%10ld\n",
 					result.isMotion, result.isOnSurface, result.dx, result.dy,
-					result.SQUAL, 0, 0, 0, result.shutter,
+					result.SQUAL, 0, 0, 0, 0,
 					X_POS, Y_POS);
 		}
 

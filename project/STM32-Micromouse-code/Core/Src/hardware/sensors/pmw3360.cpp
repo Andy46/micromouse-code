@@ -72,7 +72,7 @@ namespace HARDWARE::SENSORS
 {
 
 PMW3360::PMW3360(std::shared_ptr<COMMS::SPI> spi, std::shared_ptr<EXTRA::GPIO> cs) :
-		spi(spi), cs(cs), _inBurst(false), _lastBurst(0)
+		spi(spi), cs(cs)
 {
 	// Set SPI chip select line to unselect
 	cs->set();
@@ -80,7 +80,15 @@ PMW3360::PMW3360(std::shared_ptr<COMMS::SPI> spi, std::shared_ptr<EXTRA::GPIO> c
 
 error_t PMW3360::init()
 {
-	hardReset();
+	cs->set();
+	HAL_Delay(3);
+
+	// Shutdown sensor
+	sendShutdown();
+	HAL_Delay(300);
+
+	// Reset
+	resetSPI();
 
 	sendPowerUp();
 	HAL_Delay(50);
@@ -97,20 +105,61 @@ error_t PMW3360::init()
 error_t PMW3360::configure()
 {
 	// TODO: Implement proper configuration
-	setCPI(800);
+//	setCPI(800);
+
+	writeReg(0x10, 0x00); // Rest mode & independant X/Y CPI disabled
+	HAL_Delay_us(40);
+	writeReg(0x0d, 0x00); // Camera angle
+	HAL_Delay_us(40);
+	writeReg(0x11, 0x00); // Camera angle fine tuning
+	HAL_Delay_us(40);
+	uint8_t dpi = 0x03;
+	writeReg(0x0f, dpi); // DPI
+	HAL_Delay_us(40);
+	// LOD Stuff
+	writeReg(0x63, 0x03); // LOD: 0x00 disable lift detection, 0x02 = 2mm, 0x03 = 3mm
+	HAL_Delay_us(40);
+	writeReg(0x2b, 0x80); // Minimum SQUAL for zero motion data (default: 0x10)��max is 0x80
+	HAL_Delay_us(40);
+	writeReg(0x2c, 0x0a); // Minimum Valid features (reduce SQUAL score) (default: 0x0a)
+	HAL_Delay_us(40);
 
 	DEVICE::setReady();
 	return error_t::OK;
 }
 
-error_t PMW3360::hardReset()
+error_t PMW3360::test_comms()
 {
-	HAL_Delay_us(1);
-	cs->clear();
-	HAL_Delay_us(1);
-	cs->set();
-	HAL_Delay_us(1);
+	uint8_t id;
+	uint8_t rid;
 
+	readReg(REG_Product_ID, id);
+	readReg(REG_Revision_ID, rid);
+
+	printf("ID: 0x%02x\n", id);
+	printf("rID: 0x%02x\n", rid);
+	if (id == 0x42)
+	{
+		return error_t::OK;
+	}
+	else
+	{
+		return error_t::PMW3360_ERROR;
+	}
+}
+error_t PMW3360::resetSPI()
+{
+	cs->clear();
+	HAL_Delay_us(40);
+	cs->set();
+	HAL_Delay_us(40);
+
+	return error_t::OK;
+}
+
+error_t PMW3360::sendShutdown()
+{
+	writeReg(REG_Shutdown, 0xb6);
 	return error_t::OK;
 }
 
@@ -126,22 +175,27 @@ error_t PMW3360::readData(Result_t& result)
 	uint8_t regDataH = 0;
 	uint8_t regDataL = 0;
 
+	writeReg(REG_Motion, 0x00);
+
 	readReg(REG_Motion, regData);
 	result.isMotion = (regData & 0x80) != 0;
 	result.isOnSurface = (regData & 0x08) == 0;   // 0 if on surface / 1 if off surface
 
-	readReg(REG_Delta_X_L, regDataH);
-	readReg(REG_Delta_X_H, regDataL);
-	result.dx = regDataH<<8 | regDataL;
+	if (result.isMotion)
+	{
+		readReg(REG_Delta_X_L, regDataL);
+		readReg(REG_Delta_X_H, regDataH);
+		result.dx = regDataH<<8 | regDataL;
 
-	readReg(REG_Delta_Y_L, regData);
-	readReg(REG_Delta_Y_H, regData);
-	result.dy = regDataH<<8 | regDataL;
+		readReg(REG_Delta_Y_L, regDataL);
+		readReg(REG_Delta_Y_H, regDataH);
+		result.dy = regDataH<<8 | regDataL;
 
-	result.SQUAL = 0;
-	result.rawDataSum = 0;
-	result.maxRawData = 0;
-	result.minRawData = 0;
+		result.SQUAL = 0;
+		result.rawDataSum = 0;
+		result.maxRawData = 0;
+		result.minRawData = 0;
+	}
 
 	return error_t::OK;
 }
@@ -149,15 +203,10 @@ error_t PMW3360::readData(Result_t& result)
 error_t PMW3360::readDataBurst(Result_t& result)
 {
 	// "4.0 Burst mode operation" process from Datasheet
-	unsigned long fromLast = HAL_GetTick() - _lastBurst; // micros() - _lastBurst;
 	uint8_t burstBuffer[12];
 
-	// Activate burst mode if needed
-	if(!_inBurst || fromLast > 500*1000)
-	{
-		writeReg(REG_Motion_Burst, 0x00);
-		_inBurst = true;
-	}
+	// Activate burst mode
+	writeReg(REG_Motion_Burst, 0x00);
 
 	// Activate SPI chip select line
 	cs->clear();
@@ -168,13 +217,6 @@ error_t PMW3360::readDataBurst(Result_t& result)
 
 	spi->receive(burstBuffer, sizeof(burstBuffer));
 	HAL_Delay_us(1); // tSCLK-NCS for read operation is 120ns
-
-	if(burstBuffer[0] & 0b111) // panic recovery, sometimes burst mode works weird.
-	{
-		_inBurst = false;
-	}
-
-	_lastBurst = HAL_GetTick();
 
     // Deactivate SPI chip select line
 	cs->set();
@@ -220,19 +262,17 @@ error_t PMW3360::uploadFW()
 	uint8_t cmd = REG_SROM_Load_Burst | 0x80; // write burst destination adress
 	spi->send(&cmd, sizeof(cmd));
 //	HAL_SPI_Transmit(&hspi1, &cmd, sizeof(cmd), 1000);
-	HAL_Delay_us(16);
 
 	// send all bytes of the firmware
 	uint8_t byte;
 	for (int i = 0; i < FW_SIZE; i++) {
+		HAL_Delay_us(16);
 		byte = FW_DATA[i]; //(unsigned char)pgm_read_byte(firmware_data + i);
 		spi->send(&byte, sizeof(byte));
-//		HAL_SPI_Transmit(&hspi1, &byte, sizeof(byte));
-		HAL_Delay_us(16);
 	}
-	HAL_Delay(200);
-
+	HAL_Delay_us(18);
 	cs->set();
+	HAL_Delay_us(200);
 
 	// 7. Read the SROM_ID register to verify the ID before any other register reads or writes.
 	uint8_t reg_data;
@@ -281,19 +321,18 @@ unsigned int PMW3360::getCPI()
 
 error_t PMW3360::readReg(uint8_t reg_addr, uint8_t& reg_data)
 {
-	if(reg_addr != REG_Motion_Burst)
-	{
-		_inBurst = false;
-	}
+    uint8_t buffer = reg_addr & 0x7f;
 
 	  // Activate SPI chip select line
     cs->clear();
 
     // Send command
-    spi->send(&reg_addr, sizeof(reg_addr));
+    spi->send(&buffer, sizeof(buffer));
+	HAL_Delay_us(200);
 
     // Receive data
     spi->receive(&reg_data, sizeof(reg_data));
+	HAL_Delay_us(120);
 
     // Deactivate SPI chip select line
     cs->set();
@@ -303,22 +342,18 @@ error_t PMW3360::readReg(uint8_t reg_addr, uint8_t& reg_data)
 
 error_t PMW3360::writeReg(uint8_t reg_addr, uint8_t data)
 {
-	if(reg_addr != REG_Motion_Burst)
-	{
-		_inBurst = false;
-	}
-
     // Compose transmission buffer (address + data)
 	constexpr uint8_t len = sizeof(reg_addr)+sizeof(data);
     uint8_t buffer[len];
-    buffer[0] = reg_addr;
-    memcpy(&(buffer[1]), &data, sizeof(data));
+    buffer[0] = reg_addr | 0x80;
+    buffer[1] = data;
 
     // Activate SPI chip select line
     cs->clear();
 
     // Send buffer
-    spi->send(buffer, sizeof(buffer), 1000);
+    spi->send(buffer, sizeof(buffer));
+	HAL_Delay_us(35);
 
     // Deactivate SPI chip select line
     cs->set();

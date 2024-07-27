@@ -53,16 +53,16 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(PMW_CS_GPIO_Port, PMW_CS_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOC, PMW_CS_Pin|PMW_NRESET_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(PMW_NRESET_GPIO_Port, PMW_NRESET_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, FLASH_CS_Pin|SD_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, FLASH_CS_Pin|SD_CS_Pin|BT_ENABLE_Pin|MOTOR_SLEEP_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(BMI_CS_GPIO_Port, BMI_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(BMI_CS_GPIO_Port, BMI_CS_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, BT_ENABLE_Pin|MOTOR_SLEEP_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : PCPin PCPin */
   GPIO_InitStruct.Pin = PMW_CS_Pin|PMW_NRESET_Pin;

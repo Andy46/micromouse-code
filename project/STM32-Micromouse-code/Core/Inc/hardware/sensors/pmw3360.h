@@ -51,11 +51,8 @@ private:
 	static const int FW_SIZE;
 	static const uint8_t FW_DATA[];
 
-	// Keep track of burst mode transfers
-	bool _inBurst;
-	unsigned long _lastBurst;
-
-	error_t hardReset();
+	error_t resetSPI();
+	error_t sendShutdown();
 	error_t sendPowerUp();
 
 	error_t uploadFW();
@@ -75,6 +72,7 @@ public:
 
 	// Configuration
 	error_t configure();
+	error_t test_comms();
 
 	// Read data from sensor
 	error_t readData(Result_t& result);

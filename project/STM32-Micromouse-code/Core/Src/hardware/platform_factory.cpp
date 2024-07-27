@@ -98,12 +98,12 @@ Platform PlatformFactory::getPlatform()
 	auto tof_4 = std::make_shared<SENSORS::TOF_VL53L1X>(i2c2, tof_expander->getGPIO(GPIOEXPANDER_TOF_TOF3_XSHUT_PIN));
 
 	// BMI160
-	auto bmi_cs = std::make_shared<EXTRA::STM32_GPIO> (GPIOB, GPIO_PIN_12);
+	auto bmi_cs = std::make_shared<EXTRA::STM32_GPIO> (BMI_CS_GPIO_Port, BMI_CS_Pin);
 	auto bmi = std::make_shared<SENSORS::BMI160>(spi1, bmi_cs);
 
 	// PMW3360
-	auto pmw_cs = std::make_shared<EXTRA::STM32_GPIO> (GPIOC, GPIO_PIN_13);
-	auto pmw = std::make_shared<SENSORS::PMW3360>(spi1, bmi_cs);
+	auto pmw_cs = std::make_shared<EXTRA::STM32_GPIO> (PMW_CS_GPIO_Port, PMW_CS_Pin);
+	auto pmw = std::make_shared<SENSORS::PMW3360>(spi1, pmw_cs);
 
 	// Create the platform and return it
 	return Platform (tof_1, tof_2, tof_3, tof_4, bmi, pmw, leds, switches);
