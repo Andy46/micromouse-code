@@ -98,8 +98,20 @@ error_t PMW3360::init()
 
 	uploadFW();
 
-	DEVICE::setInitialized();
-	return error_t::OK;
+	error_t status = error_t::OK;
+
+	if (checkSignature())
+	{
+		status = error_t::OK;
+		DEVICE::setInitialized();
+	}
+	else
+	{
+		status = error_t::PMW3360_ERROR;
+		DEVICE::setError();
+	}
+
+	return status;
 }
 
 error_t PMW3360::configure()
@@ -128,23 +140,6 @@ error_t PMW3360::configure()
 	return error_t::OK;
 }
 
-error_t PMW3360::test_comms()
-{
-	uint8_t id;
-	uint8_t rid;
-
-	readReg(REG_Product_ID, id);
-	readReg(REG_Revision_ID, rid);
-
-	if (id == 0x42)
-	{
-		return error_t::OK;
-	}
-	else
-	{
-		return error_t::PMW3360_ERROR;
-	}
-}
 error_t PMW3360::resetSPI()
 {
 	cs->clear();
@@ -292,7 +287,13 @@ bool PMW3360::checkSignature()
 	readReg(REG_Inverse_Product_ID, iv_pid);
 	readReg(REG_SROM_ID, SROM_ver);
 
-	return pid==0x42 && iv_pid==0xBD && SROM_ver==0x04;
+	constexpr uint8_t EXPECTED_ID = 0x42;
+	constexpr uint8_t EXPECTED_IV_PID = 0xBD;
+	constexpr uint8_t EXPECTED_SROM_VER = 0x04;
+
+	return pid==EXPECTED_ID &&
+			iv_pid==EXPECTED_IV_PID &&
+			EXPECTED_SROM_VER==0x04;
 }
 
 void PMW3360::setCPI(unsigned int cpi)

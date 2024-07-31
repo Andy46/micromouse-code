@@ -37,12 +37,6 @@ static uint8_t bmi_created_count = 0;
  */
 int8_t bmi160spi_read_cb (uint8_t dev_addr, uint8_t reg_addr, uint8_t *read_data, uint16_t len)
 {
-#ifdef DEBUG
-    printf("Reading from SPI!\n");
-    printf("dev: 0x%x\n", dev_addr);
-    printf("reg: 0x%x\n", reg_addr);
-    printf("Len: %d\n", len);
-#endif
     // Activate SPI chip select line
     bmi_cbs[dev_addr].cs->clear();
 
@@ -60,13 +54,6 @@ int8_t bmi160spi_read_cb (uint8_t dev_addr, uint8_t reg_addr, uint8_t *read_data
 
 int8_t bmi160spi_write_cb (uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len)
 {
-#ifdef DEBUG
-    printf("Writing to SPI!\n");
-    printf("dev: 0x%x\n", dev_addr);
-    printf("reg: 0x%x\n", reg_addr);
-    printf("Len: %d\n", len);
-#endif
-
     // Compose transmission buffer (address + data)
     uint8_t buffer[len+1];
     buffer[0] = reg_addr;

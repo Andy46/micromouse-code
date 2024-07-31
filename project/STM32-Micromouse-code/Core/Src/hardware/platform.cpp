@@ -220,7 +220,6 @@ void Platform::run_test()
 		printf("M;S;deltaX;deltaY;SQUAL;rawSum;maxData;minData;shutter;_________X-_________Y\n");
 		while(1)
 		{
-//			pmw3360->readData(result);
 			pmw3360->readDataBurst(result);
 
 			if (result.isMotion)

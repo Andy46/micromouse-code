@@ -18,7 +18,6 @@ int UART::send(uint8_t* buffer, const uint16_t length, const uint32_t timeout)
 {
 	if (nullptr == buffer)
 	{
-		// TODO: Throw exception?
 		return -1;
 	}
 	// TODO: Add mutex protection
@@ -30,7 +29,6 @@ int UART::receive(uint8_t* buffer, const uint16_t length, const uint32_t timeout
 {
 	if (nullptr == buffer)
 	{
-		// TODO: Throw exception?
 		return -1;
 	}
 	// TODO: Add mutex protection

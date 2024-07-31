@@ -76,7 +76,6 @@ public:
 
 	// Configuration
 	error_t configure();
-	error_t test_comms();
 
 	// Read data from sensor
 	error_t readData(Result_t& result);

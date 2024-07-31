@@ -18,7 +18,6 @@ int I2C::send(const I2CAddress_t address, uint8_t* buffer, const uint16_t length
 {
 	if (nullptr == buffer)
 	{
-		// TODO: Throw exception?
 		return -1;
 	}
 	// TODO: Add mutex protection
@@ -30,7 +29,6 @@ int I2C::receive(const I2CAddress_t address, uint8_t* buffer, const uint16_t len
 {
 	if (nullptr == buffer)
 	{
-		// TODO: Throw exception?
 		return -1;
 	}
 	// TODO: Add mutex protection
