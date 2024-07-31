@@ -96,7 +96,7 @@ public:
 	// Configuration
 	error_t init();
 	error_t configure(MODE mode = MODE::SHORT);
-	error_t setI2CAddress(uint16_t newAddress);
+	error_t changeAddress(uint16_t newAddress);
 
 	// Measurements
 	error_t start();

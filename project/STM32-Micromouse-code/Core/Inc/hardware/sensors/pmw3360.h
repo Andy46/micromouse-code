@@ -31,7 +31,7 @@ namespace HARDWARE::SENSORS
  *
  * Datasheet: https://d3s5r33r268y59.cloudfront.net/datasheets/9604/2017-05-07-18-19-11/PMS0058-PMW3360DM-T2QU-DS-R1.50-26092016._20161202173741.pdf
  **/
-class PMW3360 : DEVICE
+class PMW3360 : public DEVICE
 {
 public:
 

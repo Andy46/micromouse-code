@@ -244,7 +244,7 @@ int8_t TOF_VL53L1X::SetI2CAddress(uint8_t new_address)
 {
 	int8_t status = 0;
 
-	status |= I2C_WrByte(VL53L1_I2C_SLAVE__DEVICE_ADDRESS, new_address >> 1);
+	status |= I2C_WrByte(VL53L1_I2C_SLAVE__DEVICE_ADDRESS, new_address);
 	return status;
 }
 

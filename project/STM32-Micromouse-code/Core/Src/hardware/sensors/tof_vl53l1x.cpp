@@ -94,6 +94,18 @@ error_t TOF_VL53L1X::configure(TOF_VL53L1X::MODE mode)
 	return error_t::OK;
 }
 
+error_t TOF_VL53L1X::changeAddress(uint16_t newAddress)
+{
+	int8_t status = SetI2CAddress(newAddress);
+    if (status != 0)
+    {
+    	DEVICE::setError();
+    	return error_t::TOF_ERROR;
+    }
+	address = newAddress;
+	return error_t::OK;
+}
+
 error_t TOF_VL53L1X::start()
 {
 	int8_t status = StartRanging();
