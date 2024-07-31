@@ -22,11 +22,13 @@ int app_main()
 	/* Hardware definition */
 	HARDWARE::Platform platform = HARDWARE::PlatformFactory::getPlatform();
 
+	platform.init();
+	platform.checkStatus();
+
 	// Run tests over platform
 	platform.run_test();
 
 	// Application logic
-	//	platform.init();
 	//  setup();
 	//  TBD
 

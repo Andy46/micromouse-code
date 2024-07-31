@@ -61,7 +61,7 @@ Platform PlatformFactory::getPlatform()
 
 	// SPI
 	auto spi1 = std::make_shared<COMMS::SPI>(hspi1);
-	auto spi2 = std::make_shared<COMMS::SPI>(hspi2);
+//	auto spi2 = std::make_shared<COMMS::SPI>(hspi2);
 
 	// UART
 	auto usart1 = std::make_shared<COMMS::UART>(huart1);
@@ -92,10 +92,21 @@ Platform PlatformFactory::getPlatform()
 	/***********/
 
 	// TOFs
-	auto tof_1 = std::make_shared<SENSORS::TOF_VL53L1X>(i2c2, tof_expander->getGPIO(GPIOEXPANDER_TOF_TOF0_XSHUT_PIN));
-	auto tof_2 = std::make_shared<SENSORS::TOF_VL53L1X>(i2c2, tof_expander->getGPIO(GPIOEXPANDER_TOF_TOF1_XSHUT_PIN));
-	auto tof_3 = std::make_shared<SENSORS::TOF_VL53L1X>(i2c2, tof_expander->getGPIO(GPIOEXPANDER_TOF_TOF2_XSHUT_PIN));
-	auto tof_4 = std::make_shared<SENSORS::TOF_VL53L1X>(i2c2, tof_expander->getGPIO(GPIOEXPANDER_TOF_TOF3_XSHUT_PIN));
+	auto tof_left_xshut = std::make_unique<EXTRA::STM32_GPIO> (TOF_1_XSHUT_GPIO_Port, TOF_1_XSHUT_Pin);
+	tof_left_xshut->clear();
+	auto tof_left = std::make_shared<SENSORS::TOF_VL53L1X>(i2c2, std::move(tof_left_xshut));
+
+	auto tof_front_left_xshut = std::make_unique<EXTRA::STM32_GPIO> (TOF_2_XSHUT_GPIO_Port, TOF_2_XSHUT_Pin);
+	tof_front_left_xshut->clear();
+	auto tof_front_left = std::make_shared<SENSORS::TOF_VL53L1X>(i2c2, std::move(tof_front_left_xshut));
+
+	auto tof_front_right_xshut = std::make_unique<EXTRA::STM32_GPIO> (TOF_3_XSHUT_GPIO_Port, TOF_3_XSHUT_Pin);
+	tof_front_right_xshut->clear();
+	auto tof_front_right = std::make_shared<SENSORS::TOF_VL53L1X>(i2c1, std::move(tof_front_right_xshut));
+
+	auto tof_right_xshut = std::make_unique<EXTRA::STM32_GPIO> (TOF_4_XSHUT_GPIO_Port, TOF_4_XSHUT_Pin);
+	tof_right_xshut->clear();
+	auto tof_right = std::make_shared<SENSORS::TOF_VL53L1X>(i2c1, std::move(tof_right_xshut));
 
 	// BMI160
 	auto bmi_cs = std::make_shared<EXTRA::STM32_GPIO> (BMI_CS_GPIO_Port, BMI_CS_Pin);
@@ -106,7 +117,7 @@ Platform PlatformFactory::getPlatform()
 	auto pmw = std::make_shared<SENSORS::PMW3360>(spi1, pmw_cs);
 
 	// Create the platform and return it
-	return Platform (tof_1, tof_2, tof_3, tof_4, bmi, pmw, leds, switches);
+	return Platform (tof_left, tof_front_left, tof_front_right, tof_right, bmi, pmw, leds, switches);
 }
 
 } /* namespace HARDWARE */

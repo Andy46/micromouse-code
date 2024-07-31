@@ -63,6 +63,8 @@ public:
 
 	void init();
 
+	void checkStatus();
+
 	void run_test();
 
 };

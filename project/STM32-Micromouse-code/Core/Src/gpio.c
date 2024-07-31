@@ -56,13 +56,16 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOC, PMW_CS_Pin|PMW_NRESET_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, FLASH_CS_Pin|SD_CS_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, FLASH_CS_Pin|GY91_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(BMI_CS_GPIO_Port, BMI_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, BT_ENABLE_Pin|MOTOR_SLEEP_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, TOF_1_XSHUT_Pin|TOF_2_XSHUT_Pin|TOF_3_XSHUT_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, TOF_4_XSHUT_Pin|BT_ENABLE_Pin|MOTOR_SLEEP_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : PCPin PCPin */
   GPIO_InitStruct.Pin = PMW_CS_Pin|PMW_NRESET_Pin;
@@ -77,8 +80,10 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(PMW_MOTION_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PAPin PAPin PAPin PAPin */
-  GPIO_InitStruct.Pin = FLASH_CS_Pin|SD_CS_Pin|BT_ENABLE_Pin|MOTOR_SLEEP_Pin;
+  /*Configure GPIO pins : PAPin PAPin PAPin PAPin
+                           PAPin */
+  GPIO_InitStruct.Pin = FLASH_CS_Pin|TOF_4_XSHUT_Pin|GY91_CS_Pin|BT_ENABLE_Pin
+                          |MOTOR_SLEEP_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -90,15 +95,15 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(MOTOR_FAULT_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PtPin */
-  GPIO_InitStruct.Pin = BMI_CS_Pin;
+  /*Configure GPIO pins : PBPin PBPin PBPin PBPin */
+  GPIO_InitStruct.Pin = BMI_CS_Pin|TOF_1_XSHUT_Pin|TOF_2_XSHUT_Pin|TOF_3_XSHUT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(BMI_CS_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PAPin PAPin PAPin */
-  GPIO_InitStruct.Pin = SD_DETECT_Pin|BT_STATE_Pin|TOF_INT_Pin;
+  /*Configure GPIO pins : PAPin PAPin */
+  GPIO_InitStruct.Pin = BT_STATE_Pin|TOF_INT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);

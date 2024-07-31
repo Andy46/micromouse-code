@@ -7,6 +7,7 @@
 
 #include "hardware/platform.h"
 #include <stdio.h>
+#include <array>
 
 #include "hardware/sensors/pmw3360.h"
 
@@ -31,213 +32,134 @@ Platform::Platform(std::shared_ptr<SENSORS::TOF_VL53L1X> tof_left,
 
 void Platform::init()
 {
+	/* Init TOF sensors */
+	constexpr uint8_t TOF_1_ADDRESS = 0x71;
+	constexpr uint8_t TOF_2_ADDRESS = 0x72;
+	constexpr uint8_t TOF_3_ADDRESS = 0x73;
+	constexpr uint8_t TOF_4_ADDRESS = 0x74;
+	constexpr int TOF_TURN_ON_DELAY_MS = 10;
 
-}
-
-#define TEST_TOFS
-#define TEST_LEDS
-#define TEST_SWITCHES
-#define TEST_BMI
-#define TEST_PMW
-
-
-void Platform::run_test()
-{
-
-#ifdef TEST_TOFS
 	tof_left->turnOff();
 	tof_frontleft->turnOff();
 	tof_frontright->turnOff();
 	tof_right->turnOff();
-	HAL_Delay(10);
-    
-	if (tof_left)
-	{
-        printf("\n\n=== Testing Left TOF ===\n");
-		tof_left->turnOn();
-		HAL_Delay(20);
-		tof_left->init();
-		HAL_Delay(20);
-		tof_left->configure();
-		HAL_Delay(20);
-		tof_left->start();
 
-		SENSORS::TOF_VL53L1X::Result_t result;
-        printf("Statu;Dista;sSPAD;ambie;nSPAD\n");
-		for (int i=0; i<10; i++)
+	printf("=== Init Platform ===\n");
+
+	printf("Init TOF Left\n");
+	tof_left->turnOn();
+	HAL_Delay(TOF_TURN_ON_DELAY_MS);
+	tof_left->changeAddress(TOF_1_ADDRESS);
+	tof_left->init();
+	tof_left->configure(SENSORS::TOF_VL53L1X::SHORT);
+
+	printf("Init TOF Front Left\n");
+	tof_frontleft->turnOn();
+	HAL_Delay(TOF_TURN_ON_DELAY_MS);
+	tof_frontleft->changeAddress(TOF_2_ADDRESS);
+	tof_frontleft->init();
+	tof_frontleft->configure(SENSORS::TOF_VL53L1X::SHORT);
+
+	printf("Init TOF Front Right\n");
+	tof_frontright->turnOn();
+	HAL_Delay(TOF_TURN_ON_DELAY_MS);
+	tof_frontright->changeAddress(TOF_3_ADDRESS);
+	tof_frontright->init();
+	tof_frontright->configure(SENSORS::TOF_VL53L1X::SHORT);
+
+	printf("Init TOF Right\n");
+	tof_right->turnOn();
+	HAL_Delay(TOF_TURN_ON_DELAY_MS);
+	tof_right->changeAddress(TOF_4_ADDRESS);
+	tof_right->init();
+	tof_right->configure(SENSORS::TOF_VL53L1X::SHORT);
+
+	/* Init LEDs */
+//	printf("Init LEDs\n");
+//	leds->turnOff(0);
+//	leds->turnOff(1);
+//	leds->turnOff(2);
+//	leds->turnOff(3);
+
+	/* Init Switch status */
+
+	/* Init IMUs */
+	printf("Init BMI\n");
+	bmi160->init();
+	bmi160->configure();
+
+	/* Init PMW sensor */
+	printf("Init PMW3360\n");
+	pmw3360->init();
+	pmw3360->configure();
+}
+
+void Platform::checkStatus()
+{
+	printf("=== Platform status ===\n");
+	printf("TOF status:\n");
+	printf("  Left        : %d\n", tof_left->getStatus());
+	printf("  Front-left  : %d\n", tof_frontleft->getStatus());
+	printf("  Front-right : %d\n", tof_frontright->getStatus());
+	printf("  Right       : %d\n", tof_right->getStatus());
+	printf("\n");
+	printf("IMU status:\n");
+	printf("  BMI160      : %d\n", bmi160->getStatus());
+	printf("  MPU9250     : Not available\n");
+	printf("\n");
+	printf("Other status:\n");
+	printf("  PMW3360     : %d\n", pmw3360->getStatus());
+}
+
+void Platform::run_test()
+{
+
+	constexpr int TOF_COUNT = 4;
+	std::array<std::shared_ptr<SENSORS::TOF_VL53L1X>, TOF_COUNT> tofs {tof_left, tof_frontleft, tof_frontright, tof_right};
+	std::array<SENSORS::TOF_VL53L1X::Result_t, TOF_COUNT> tof_results;
+
+	for (int i=0; i<TOF_COUNT; i++)
+	{
+		tofs[i]->start();
+	}
+
+    struct bmi160_sensor_data accel_data, gyro_data;
+
+	SENSORS::PMW3360::Result_t pmw_result;
+	int pmw_pos_x = 0, pmw_pos_y = 0;
+
+
+	printf("TOF L - TOF FL - TOF FR - TOF R - BMI GZ - PMW X - PMW Y\n");
+	while (1)
+	{
+
+		for (int i=0; i<TOF_COUNT; i++)
 		{
-			while(!tof_left->isDataReady())
+			if(tofs[i]->isDataReady())
 			{
-				HAL_Delay(2);
+				tofs[i]->getDataAndRestart(tof_results[i]);
 			}
-			tof_left->getDataAndRestart(result);
-			printf("%5u;%5u;%5u;%5u;%5u\n", result.status, result.distance, result.sigPerSPAD, result.ambient, result.numSPADs);
-		}
-		tof_left->turnOff();
-
-		printf("Sensor status: %d\n", tof_left->getStatus());
-
-		HAL_Delay(100);
-	}
-
-//	if (tof_frontleft)
-//	{
-//      printf("\n\n=== Testing Front-left TOF ===\n");
-//		tof_frontleft->turnOn();
-//		HAL_Delay(20);
-//		tof_frontleft->init();
-//		HAL_Delay(20);
-//		tof_frontleft->configure();
-//		HAL_Delay(20);
-//		tof_frontleft->StartRanging();
-//		for (int i=0; i<20; i++)
-//		{
-//			tof_frontleft->printDistance();
-//		}
-//		tof_frontleft->turnOff();
-//		HAL_Delay(100);
-//	}
-//
-//	if (tof_frontright)
-//	{
-//      printf("\n\n=== Testing Front-right TOF ===\n");
-//		tof_frontright->turnOn();
-//		HAL_Delay(20);
-//		tof_frontright->init();
-//		HAL_Delay(20);
-//		tof_frontright->configure();
-//		HAL_Delay(20);
-//		tof_frontright->StartRanging();
-//		for (int i=0; i<20; i++)
-//		{
-//			tof_frontright->printDistance();
-//		}
-//		tof_frontright->turnOff();
-//		HAL_Delay(100);
-//	}
-//
-//	if (tof_right)
-//	{
-//      printf("\n\n=== Testing Right TOF ===\n");
-//		tof_right->turnOn();
-//		HAL_Delay(20);
-//		tof_right->init();
-//		HAL_Delay(20);
-//		tof_right->configure();
-//		HAL_Delay(20);
-//		tof_right->StartRanging();
-//		for (int i=0; i<20; i++)
-//		{
-//			tof_right->printDistance();
-//		}
-//		tof_right->turnOff();
-//		HAL_Delay(100);
-//	}
-#endif
-
-#ifdef TEST_LEDS
-	if (leds)
-	{
-		printf("\n\n=== Testing LEDs ===\n");
-		for (int i=0; i<LED_COUNT; i++)
-		{
-			printf("Turn LED %d: ON\n", i);
-			leds->turnOn(i);
-		}
-		for (int i=0; i<LED_COUNT; i++)
-		{
-			printf("Turn LED %d: OFF\n", i);
-			leds->turnOff(i);
-		}
-		for (int i=0; i<LED_COUNT; i++)
-		{
-			printf("Toogle LED %d: ON\n", i);
-			leds->toggle(i);
-			printf("Toogle LED %d: OFF\n", i);
-			leds->toggle(i);
-		}
-	}
-	HAL_Delay(500);
-#endif
-
-#ifdef TEST_SWITCHES
-	if (switches)
-	{
-		printf("\n\n=== Testing Switches ===\n");
-		for (int i=0; i<SW_COUNT; i++)
-		{
-			uint8_t sw = switches->get(i);
-			printf("Switch %d: %u\n", i, sw);
-		}
-		uint8_t switches_val = switches->getAll();
-		printf("Switches: 0x%02x\n", switches_val);
-	}
-	HAL_Delay(500);
-#endif
-
-#ifdef TEST_BMI
-	if(bmi160)
-	{
-		printf("\n\n=== Testing BMI160 ===\n");
-		bmi160->init();
-        bmi160->configure();
-        HAL_Delay(250);
-
-	    struct bmi160_sensor_data accel_data;
-        printf("TimeS;AcceX;AcceY;AcceZ\n");
-		for (int i=0; i<10; i++)
-	    {
-            bmi160->read_accel(accel_data);
-            printf("%5lu;%5d;%5d;%5d\n", accel_data.sensortime, accel_data.x, accel_data.y, accel_data.z);
-        }
-
-	    struct bmi160_sensor_data gyro_data;
-        printf("\nTimeS;GyroX;GyroY;GyroZ\n");
-		for (int i=0; i<10; i++)
-	    {
-            bmi160->read_gyro(gyro_data);
-            printf("%5lu;%5d;%5d;%5d\n", gyro_data.sensortime, gyro_data.x, gyro_data.y, gyro_data.z);
-        }
-
-		printf("Sensor status: %d\n", bmi160->getStatus());
-
-		HAL_Delay(500);
- 	}
-#endif
-
-#ifdef TEST_PMW
-	if(pmw3360)
-	{
-		printf("\n\n=== Testing BMI160 ===\n");
-		pmw3360->init();
-		pmw3360->configure();
-
-		pmw3360->test_comms();
-
-		SENSORS::PMW3360::Result_t result;
-		int32_t X_POS = 0, Y_POS = 0;
-
-		printf("M;S;deltaX;deltaY;SQUAL;rawSum;maxData;minData;shutter;_________X-_________Y\n");
-		while(1)
-		{
-			pmw3360->readDataBurst(result);
-
-			if (result.isMotion)
+			else
 			{
-				X_POS += result.dx;
-				Y_POS += result.dy;
+				tof_results[i].status = 1;
 			}
-
-			printf("%1d;%1d;%6d;%6d;%5u;%7u;%7u;%7u;%7u;%10ld;%10ld\n",
-					result.isMotion, result.isOnSurface, result.dx, result.dy,
-					result.SQUAL, 0, 0, 0, 0,
-					X_POS, Y_POS);
 		}
 
-		printf("Sensor status: %d\n", bmi160->getStatus());
+        bmi160->read_all(accel_data, gyro_data);
 
-		HAL_Delay(500);
+		pmw3360->readDataBurst(pmw_result);
+		if (pmw_result.isMotion && pmw_result.isOnSurface)
+		{
+			pmw_pos_x += pmw_result.dx;
+			pmw_pos_y += pmw_result.dy;
+		}
+
+		printf("%5d - %6d - %6d - %5d - %6d - %5d - %5d\n",
+				(tof_results[0].status == 0) ? tof_results[0].distance : 0,
+				(tof_results[1].status == 0) ? tof_results[1].distance : 0,
+				(tof_results[2].status == 0) ? tof_results[2].distance : 0,
+				(tof_results[3].status == 0) ? tof_results[3].distance : 0,
+				gyro_data.z, pmw_pos_x, pmw_pos_y);
 	}
-#endif
 }
 } /* namespace HARDWARE */
